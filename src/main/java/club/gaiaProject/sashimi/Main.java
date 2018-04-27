@@ -16,12 +16,15 @@ import java.util.List;
  */
 public class Main {
     public static void main(String[] args) throws Exception {
-        File file = new File("D:\\guide.csv");
+        File file = new File("C:\\Users\\73989\\Desktop\\CCTVEHM\\test.xls");
         String[][] result = getData(file, 1);
         int rowLength = result.length;
         for (int i = 0; i < rowLength; i++) {
             System.out.println(result[i]);
+            //计算 针对字符串 针对数字的处理
+            //遍历到行
             for (int j = 0; j < result[i].length; j++) {
+                //
                 System.out.print(result[i][j] + "\t\t");
             }
             System.out.println();
@@ -32,34 +35,48 @@ public class Main {
      * 读取Excel的内容，第一维数组存储的是一行中格列的值，二维数组存储的是多少个行
      *
      * @param file       读取数据的源Excel
-     * @param ignoreRows 读取数据忽略的行数，比喻行头不需要读入 忽略的行数为1
+     * @param ignoreRows 读取数据忽略的行数，比如行头不需要读入 忽略的行数为1
      * @return 读出的Excel中数据的内容
      * @throws FileNotFoundException
      * @throws IOException
      */
+    /*
+     | aaa | bbb | ccc |
+     | 111 | 222 | 333 |
+     | ccc | aaa | ddd |
+     */
+    //[[aaa,bbb,cc],[111,222,333],[ccc,aaa,ddd] .........,]
     public static String[][] getData(File file, int ignoreRows)
             throws FileNotFoundException, IOException {
         List<String[]> result = new ArrayList<String[]>();
-        int rowSize = 0;
+        int rowSize = 0;//3 ，4
+        //创建读取execl的流
         BufferedInputStream in = new BufferedInputStream(new FileInputStream(
                 file));
-        // 打开HSSFWorkbook
+        // 打开HSSFWorkbook 关联execl
         POIFSFileSystem fs = new POIFSFileSystem(in);
         HSSFWorkbook wb = new HSSFWorkbook(fs);
+
         HSSFCell cell = null;
+        //遍历 sheet
         for (int sheetIndex = 0; sheetIndex < wb.getNumberOfSheets(); sheetIndex++) {
+            //取sheet
             HSSFSheet st = wb.getSheetAt(sheetIndex);
             // 第一行为标题，不取
+            //遍历行
             for (int rowIndex = ignoreRows; rowIndex <= st.getLastRowNum(); rowIndex++) {
+                //取行
                 HSSFRow row = st.getRow(rowIndex);
                 if (row == null) {
                     continue;
                 }
+                //取excel 最大列数
                 int tempRowSize = row.getLastCellNum() + 1;
                 if (tempRowSize > rowSize) {
                     rowSize = tempRowSize;
                 }
-                String[] values = new String[rowSize];
+
+                String[] values = new String[rowSize];//某一行每一列的值
                 Arrays.fill(values, "");
                 boolean hasValue = false;
                 for (short columnIndex = 0; columnIndex <= row.getLastCellNum(); columnIndex++) {
@@ -118,7 +135,7 @@ public class Main {
                 if (hasValue) {
                     result.add(values);
                 }
-            }
+            }//取每一行结束
         }
         in.close();
         String[][] returnArray = new String[result.size()][rowSize];
