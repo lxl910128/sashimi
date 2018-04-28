@@ -11,25 +11,24 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import club.gaiaProject.sashimi.bean.EventBean;
+import club.gaiaProject.sashimi.util.ExcelUtils;
+
 /**
  * Created by Administrator on 2018/4/17.
  */
 public class Main {
     public static void main(String[] args) throws Exception {
-        File file = new File("C:\\Users\\73989\\Desktop\\CCTVEHM\\test.xls");
-        String[][] result = getData(file, 1);
-        int rowLength = result.length;
-        for (int i = 0; i < rowLength; i++) {
-            System.out.println(result[i]);
-            //计算 针对字符串 针对数字的处理
-            //遍历到行
-            for (int j = 0; j < result[i].length; j++) {
-                //
-                System.out.print(result[i][j] + "\t\t");
-            }
-            System.out.println();
-        }
+        File file = new File("/home/magneto/文档/其它技术文档/2号线CCTV历史告警20180401-0415.xls");
+        List<EventBean> result = ExcelUtils.getDate(file, 720, true);
+        System.out.println("总记录数"+result.size());
+        DataHandler handler = new DataHandler(result);
+        handler.handle();
+        handler.print();
     }
+
+
+
 
     /**
      * 读取Excel的内容，第一维数组存储的是一行中格列的值，二维数组存储的是多少个行
@@ -37,8 +36,6 @@ public class Main {
      * @param file       读取数据的源Excel
      * @param ignoreRows 读取数据忽略的行数，比如行头不需要读入 忽略的行数为1
      * @return 读出的Excel中数据的内容
-     * @throws FileNotFoundException
-     * @throws IOException
      */
     /*
      | aaa | bbb | ccc |
