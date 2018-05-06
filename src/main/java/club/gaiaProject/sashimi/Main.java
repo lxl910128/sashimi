@@ -19,8 +19,8 @@ import club.gaiaProject.sashimi.util.ExcelUtils;
  */
 public class Main {
     public static void main(String[] args) throws Exception {
-        File file = new File("/home/magneto/文档/其它技术文档/2号线CCTV历史告警20180401-0415.xls");
-        List<EventBean> result = ExcelUtils.getDate(file, 720, true);
+        File file = new File("C:\\Users\\Administrator\\Desktop\\1.xls");
+        List<EventBean> result = ExcelUtils.getDate(file, 897, true);
         System.out.println("总记录数"+result.size());
         DataHandler handler = new DataHandler(result);
         handler.handle();

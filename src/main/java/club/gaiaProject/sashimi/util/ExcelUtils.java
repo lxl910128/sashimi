@@ -16,6 +16,7 @@ import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -28,7 +29,7 @@ import javafx.beans.binding.ObjectExpression;
  * Created by luoxiaolong on 18-4-28.
  */
 public class ExcelUtils {
-    private static SimpleDateFormat DATEFORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public static SimpleDateFormat DATEFORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public static List<EventBean> getDate(File excel, Integer rowNum, Boolean hasHead) throws IOException {
         return getDate(excel, rowNum, 15, hasHead);
@@ -119,6 +120,9 @@ public class ExcelUtils {
                 ret.add(rowInfo);
             }
         }
+        ret.sort((x,y)->{
+            return x.getTimeStamp().compareTo(y.getTimeStamp());
+        });
         return ret;
 
     }

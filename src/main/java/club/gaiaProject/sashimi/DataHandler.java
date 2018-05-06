@@ -1,7 +1,7 @@
 package club.gaiaProject.sashimi;
 
+import club.gaiaProject.sashimi.util.ExcelUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.omg.PortableInterceptor.INACTIVE;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,7 +34,7 @@ public class DataHandler {
     private Map<String, List<EventBean>> subwayErrorEvent = new HashMap<String, List<EventBean>>();//
     private Set<Integer> doubtfulEventsId = new HashSet<Integer>();//疑似的ID
     //一个车站5分种内 报警 超过5次 判定为 疑似检修
-    private static Long LIMIT_ERROR_TIME = 1000 * 60 * 5L;//最小报警间隔
+    private static Long LIMIT_ERROR_TIME = 1000 * 60 * 10L;//最小报警间隔
     private static Integer LIMIT_ERROR_NUM = 5;//最小报警数
 
     public DataHandler(List<EventBean> events) {
@@ -42,12 +42,25 @@ public class DataHandler {
     }
 
     public void print() {
-        System.out.println("有效报警数" + count);
         System.out.println("疑似检修次数："+doubtfulEventsId.size());
+        System.out.println("有效报警数" + count);
+
         System.out.println("午夜检修告警："+overhaulEvents.size());
         System.out.println("---各站有效报警数---");
         for (Map.Entry<String, List<AlarmBean>> entry : deviceErrorNum.entrySet()) {
             System.out.println(deviceMapping.get(entry.getKey()).getName() + "  " + entry.getValue().size());
+        }
+        for(List<EventBean> eventBeans:doubtfulOverhulEvents){
+
+            for(EventBean e : eventBeans){
+                System.out.print(ExcelUtils.DATEFORMAT.format(new Date(e.getTimeStamp())) +" ");
+                System.out.print(e.getDevice().getName() +" ");
+                System.out.print(e.getDevice().getSubway()+" ");
+                System.out.print(e.getDevice().getId()+" ");
+                System.out.print(e.getAlarm().getInfo());
+                System.out.println();
+            }
+            System.out.println("---------");
         }
 
 
