@@ -7,6 +7,11 @@ import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -31,6 +36,9 @@ import javafx.beans.binding.ObjectExpression;
 public class ExcelUtils {
     public static SimpleDateFormat DATEFORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
+    private static final String EXCEL_XLS = "xls";
+    private static final String EXCEL_XLSX = "xlsx";
+
     public static List<EventBean> getDate(File excel, Integer rowNum, Boolean hasHead) throws IOException {
         return getDate(excel, rowNum, 15, hasHead);
     }
@@ -39,22 +47,29 @@ public class ExcelUtils {
      * 获取excel
      */
     public static List<EventBean> getDate(File excel, Integer rowNum, Integer cellNum, Boolean hasHead) throws IOException {
-        BufferedInputStream in = new BufferedInputStream(new FileInputStream(excel));
-        // 打开HSSFWorkbook 关联execl
-        POIFSFileSystem fs = new POIFSFileSystem(in);
-        HSSFWorkbook wb = new HSSFWorkbook(fs);
+        Workbook wb = null;
+        FileInputStream in = new FileInputStream(excel);
+        // 关联execl
+        if (excel.getName().endsWith(EXCEL_XLS)) {     //Excel&nbsp;2003
+            wb = new HSSFWorkbook(in);
+        } else if (excel.getName().endsWith(EXCEL_XLSX)) {    // Excel 2007/2010
+            wb = new XSSFWorkbook(in);
+        } else {
+            System.out.println("文件格式错误！");
+            System.exit(-1);
+        }
         List<EventBean> ret = new ArrayList<EventBean>();
         //遍历 sheet
         for (int sheetIndex = 0; sheetIndex < wb.getNumberOfSheets(); sheetIndex++) {
             //取sheet
-            HSSFSheet st = wb.getSheetAt(sheetIndex);
+            Sheet st = wb.getSheetAt(sheetIndex);
             //遍历行
             int rowIndex = 0;
             if (hasHead) rowIndex = 1;
             for (; rowIndex < rowNum; rowIndex++) {
 
                 //取行
-                HSSFRow row = st.getRow(rowIndex);
+                Row row = st.getRow(rowIndex);
                 if (row == null) {
                     continue;
                 }
@@ -63,7 +78,7 @@ public class ExcelUtils {
                 DeviceBean device = new DeviceBean();
                 AlarmBean alarm = new AlarmBean();
                 for (int columnIndex = 0; columnIndex < cellNum; columnIndex++) {
-                    HSSFCell cell = row.getCell(columnIndex);
+                    Cell cell = row.getCell(columnIndex);
                     if (cell != null) {
                         switch (columnIndex) {
                             case 0:
@@ -120,14 +135,14 @@ public class ExcelUtils {
                 ret.add(rowInfo);
             }
         }
-        ret.sort((x,y)->{
+        ret.sort((x, y) -> {
             return x.getTimeStamp().compareTo(y.getTimeStamp());
         });
         return ret;
 
     }
 
-    private static Object getCellValue(HSSFCell cell, Boolean isTime) {
+    private static Object getCellValue(Cell cell, Boolean isTime) {
         Object value = null;
         switch (cell.getCellType()) {
             case HSSFCell.CELL_TYPE_STRING:
