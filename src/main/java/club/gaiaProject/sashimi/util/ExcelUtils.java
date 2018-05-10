@@ -3,17 +3,13 @@ package club.gaiaProject.sashimi.util;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -21,20 +17,19 @@ import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
 import club.gaiaProject.sashimi.bean.AlarmBean;
 import club.gaiaProject.sashimi.bean.DeviceBean;
 import club.gaiaProject.sashimi.bean.EventBean;
-import javafx.beans.binding.ObjectExpression;
 
 /**
  * Created by luoxiaolong on 18-4-28.
  */
 public class ExcelUtils {
-    public static SimpleDateFormat DATEFORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public static SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
     private static final String EXCEL_XLS = "xls";
     private static final String EXCEL_XLSX = "xlsx";
@@ -150,7 +145,7 @@ public class ExcelUtils {
                 if (isTime) {
                     if (StringUtils.isNotEmpty(str)) {
                         try {
-                            value = DATEFORMAT.parse(str).getTime();
+                            value = dateTimeFormat.parse(str).getTime();
                         } catch (ParseException e) {
                             System.out.println("日期转换失败");
                             value = null;

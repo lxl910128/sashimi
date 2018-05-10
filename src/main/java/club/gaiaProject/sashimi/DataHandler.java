@@ -1,7 +1,13 @@
 package club.gaiaProject.sashimi;
 
+import com.qihoo.wzws.rzb.secure.AnalyzeSingle;
+
 import club.gaiaProject.sashimi.util.ExcelUtils;
+
 import org.apache.commons.lang3.StringUtils;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
 
 import java.util.*;
 
@@ -36,9 +42,34 @@ public class DataHandler {
         this.events = events;
     }
 
+    public void createHTML() {
+        Properties properties = new Properties();
+        properties.setProperty("ISO-8859-1", "UTF-8");
+        properties.setProperty("input.encoding", "UTF-8");
+        properties.setProperty("output.encoding", "UTF-8");
+        if (AnalyzeSingle.isJarExecute) {
+            properties.setProperty("resource.loader", "jar");
+            properties.setProperty("jar.resource.loader.class", "org.apache.velocity.runtime.resource.loader.JarResourceLoader");
+            properties.setProperty("jar.resource.loader.path", "jar:file:" + AnalyzeSingle.jarPath);
+        } else {
+            properties.setProperty("resource.loader", "class");
+            properties.setProperty("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+        }
+
+        VelocityEngine velocityEngine = new VelocityEngine(properties);
+        Template template = velocityEngine.getTemplate("club/gaiaProject/sashimi/template/security-data.html", "UTF-8");
+        VelocityContext context = new VelocityContext();
+        //构造展示数据
+        String fromDate = ExcelUtils.dateFormat.format(new Date(startTime)) + "至" + ExcelUtils.dateFormat.format(new Date(endTime));
+
+        context.put("datetime", ExcelUtils.dateTimeFormat.format(new Date()));//头部时间
+        context.put("fromDate", fromDate);//数据时间范围
+
+    }
+
     public void print() {
-        System.out.println("数据开始时间：" + ExcelUtils.DATEFORMAT.format(new Date(startTime)));
-        System.out.println("数据结束时间：" + ExcelUtils.DATEFORMAT.format(new Date(endTime)));
+        System.out.println("数据开始时间：" + ExcelUtils.dateTimeFormat.format(new Date(startTime)));
+        System.out.println("数据结束时间：" + ExcelUtils.dateTimeFormat.format(new Date(endTime)));
         System.out.println("数据跨度：" + dayCount + "天");
         System.out.println("疑似检修次数：" + doubtfulEventsId.size());
         System.out.println("有效报警数" + count);
@@ -52,7 +83,7 @@ public class DataHandler {
         for (List<EventBean> eventBeans : doubtfulOverhulEvents) {
 
             for (EventBean e : eventBeans) {
-                System.out.print(ExcelUtils.DATEFORMAT.format(new Date(e.getTimeStamp())) + " ");
+                System.out.print(ExcelUtils.dateTimeFormat.format(new Date(e.getTimeStamp())) + " ");
                 System.out.print(e.getDevice().getName() + " ");
                 System.out.print(e.getDevice().getSubway() + " ");
                 System.out.print(e.getDevice().getId() + " ");
@@ -64,7 +95,7 @@ public class DataHandler {
         System.out.println("————作业产生告警数据————");
         for (EventBean e : overhaulEvents) {
 
-            System.out.print(ExcelUtils.DATEFORMAT.format(new Date(e.getTimeStamp())) + " ");
+            System.out.print(ExcelUtils.dateTimeFormat.format(new Date(e.getTimeStamp())) + " ");
             System.out.print(e.getDevice().getName() + " ");
             System.out.print(e.getDevice().getSubway() + " ");
             System.out.print(e.getDevice().getId() + " ");
@@ -84,10 +115,10 @@ public class DataHandler {
         dayCount = dayStamp.intValue() + 1;//天数
         if (dayCount >= 30) {
             LIMIT_ERROR_NUM = 5;
-            System.out.println("阈值："+5);
+            System.out.println("阈值：" + 5);
         } else {
             LIMIT_ERROR_NUM = 3;
-            System.out.println("阈值："+3);
+            System.out.println("阈值：" + 3);
         }
         Iterator<EventBean> it = events.iterator();
         //第一次先把疑似检修和确认的检修剔除，生成 设备基本信息
