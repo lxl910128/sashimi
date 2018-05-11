@@ -2,6 +2,7 @@ package club.gaiaProject.sashimi;
 
 import com.qihoo.wzws.rzb.secure.AnalyzeSingle;
 
+import club.gaiaProject.sashimi.bean.CountBean;
 import club.gaiaProject.sashimi.util.ExcelUtils;
 
 import org.apache.commons.lang3.StringUtils;
@@ -29,14 +30,19 @@ public class DataHandler {
     private Map<String, DeviceBean> deviceMapping = new HashMap<String, DeviceBean>();//设备id -> 设备信息
     private Map<String, List<AlarmBean>> deviceErrorNum = new HashMap<>();//设备ID -> 告警信息
     private List<List<EventBean>> doubtfulOverhulEvents = new ArrayList<List<EventBean>>();//疑似检修
-    private Integer count = 0;//有效报警
+    private Integer alarmCount = 0;//有效报警
+    private Integer eventCount = 0; //日志总数
+    private Map<String, Integer> stationAlarm = new HashMap<>();//各站报警数
+    private Map<String, String[]> lineMap = new HashMap<>();//构造折线图数据
     //临时记录
     private Map<String, Long> subwayErrorTime = new HashMap<String, Long>();//每个站最后一次报警时间
     private Map<String, List<EventBean>> subwayErrorEvent = new HashMap<String, List<EventBean>>();//
     private Set<Integer> doubtfulEventsId = new HashSet<Integer>();//疑似的ID
     //一个车站10分种内 报警 超过5次 判定为 疑似检修
     private static Long LIMIT_ERROR_TIME = 1000 * 60 * 10L;//最小报警间隔
-    private Integer LIMIT_ERROR_NUM;//最小报警数
+    private static Integer LIMIT_ERROR_NUM = 5;//最小报警数
+
+    private Integer limitFoucs = 0;//某类设备有效告警超过此值即为 重点关注对象
 
     public DataHandler(List<EventBean> events) {
         this.events = events;
@@ -64,6 +70,18 @@ public class DataHandler {
 
         context.put("datetime", ExcelUtils.dateTimeFormat.format(new Date()));//头部时间
         context.put("fromDate", fromDate);//数据时间范围
+        context.put("eventCount", eventCount);//日志总数
+        context.put("alarmCount", alarmCount);//有效告警数
+        context.put("overhaulCount", overhaulEvents.size());//午夜检修数
+        context.put("doubtfulCount", doubtfulEventsId.size());//疑似检修数
+        context.put("doubtfulThreshold", LIMIT_ERROR_NUM);//疑似检修的阈值
+        context.put("doubtfulTime", LIMIT_ERROR_TIME / 1000 / 60);//疑似检修的时间阈值
+        List<CountBean> stationAlarmList = new ArrayList<>();
+        stationAlarm.forEach((x, y) -> {
+            stationAlarmList.add(new CountBean(x, y.toString()));
+        });
+        context.put("stationAlarmList", stationAlarmList);//各站点告警数
+
 
     }
 
@@ -72,7 +90,7 @@ public class DataHandler {
         System.out.println("数据结束时间：" + ExcelUtils.dateTimeFormat.format(new Date(endTime)));
         System.out.println("数据跨度：" + dayCount + "天");
         System.out.println("疑似检修次数：" + doubtfulEventsId.size());
-        System.out.println("有效报警数" + count);
+        System.out.println("有效报警数" + alarmCount);
 
         System.out.println("午夜检修告警：" + overhaulEvents.size());
         System.out.println("---有效报警数---");
@@ -107,25 +125,27 @@ public class DataHandler {
     }
 
     public void handle() {
+        //计算起止时间
         EventBean startEventBean = events.get(0);
         EventBean endEventBean = events.get(events.size() - 1);
         startTime = startEventBean.getTimeStamp();
         endTime = endEventBean.getTimeStamp();
+        initLineData(startTime, endTime);
         Long dayStamp = (endTime - startTime) / (1000 * 60 * 60 * 24L);
+        eventCount = events.size();
         dayCount = dayStamp.intValue() + 1;//天数
         if (dayCount >= 30) {
-            LIMIT_ERROR_NUM = 5;
+            limitFoucs = 5;
             System.out.println("阈值：" + 5);
         } else {
-            LIMIT_ERROR_NUM = 3;
+            limitFoucs = 3;
             System.out.println("阈值：" + 3);
         }
         Iterator<EventBean> it = events.iterator();
         //第一次先把疑似检修和确认的检修剔除，生成 设备基本信息
         while (it.hasNext()) {
             EventBean event = it.next();
-            Date time = new Date(event.getTimeStamp());
-            calendar.setTime(time);
+            calendar.setTimeInMillis(event.getTimeStamp());
 
             //验证此条告警是否是 午夜检修
             if (checkDeviceOverhaul(event)) {
@@ -152,7 +172,12 @@ public class DataHandler {
         //处理可确信的报告
         for (EventBean event : events) {
             if (!doubtfulEventsId.contains(event.getId())) {//非疑似报警
-                //
+                //各站报警数
+                if (stationAlarm.containsKey(event.getDevice().getSubway())) {
+                    stationAlarm.put(event.getDevice().getSubway(), stationAlarm.get(event.getDevice().getSubway()) + 1);
+                } else {
+                    stationAlarm.put(event.getDevice().getSubway(), 1);
+                }
 
 
                 //各个设备有多少次
@@ -165,7 +190,7 @@ public class DataHandler {
                 }
 
                 //有效告警的总数
-                this.count++;
+                this.alarmCount++;
             }
         }
     }
@@ -201,6 +226,23 @@ public class DataHandler {
         }
     }
 
+    private void initLineData(Long start, Long end) {
+        Calendar s = Calendar.getInstance();
+        s.setTimeInMillis(start);
+        s.set(Calendar.HOUR_OF_DAY, 0);
+        s.set(Calendar.MINUTE, 0);
+        s.set(Calendar.SECOND, 0);
+
+        Calendar e = Calendar.getInstance();
+        e.setTimeInMillis(end);
+
+        while (s.compareTo(e) <= 0) {
+            String key = String.format("%s-%s-%s", s.get(Calendar.YEAR), s.get(Calendar.MONTH), s.get(Calendar.DAY_OF_MONTH));
+            lineMap.put(key, new String[3]);
+            s.add(Calendar.DAY_OF_MONTH, 1);
+        }
+    }
+
 
     //0-4 23以后 设备检修 判定为 午夜检修
     private Boolean checkDeviceOverhaul(EventBean eventBean) {
@@ -211,4 +253,29 @@ public class DataHandler {
         }
         return false;
     }
+
+    private String getDateKey(Calendar s){
+        return String.format("%s-%s-%s", s.get(Calendar.YEAR), s.get(Calendar.MONTH), s.get(Calendar.DAY_OF_MONTH));
+    }
+
+    public static void main(String[] args) {
+        Map<String, String[]> lineMap = new HashMap<>();
+        Calendar s = Calendar.getInstance();
+        s.setTimeInMillis(1526028786000L);
+        s.set(Calendar.HOUR_OF_DAY, 0);
+        s.set(Calendar.MINUTE, 0);
+        s.set(Calendar.SECOND, 0);
+
+        Calendar e = Calendar.getInstance();
+        e.setTimeInMillis(1526616732000L);
+
+        while (s.compareTo(e) <= 0) {
+            String key = String.format("%s-%s-%s", s.get(Calendar.YEAR), s.get(Calendar.MONTH), s.get(Calendar.DAY_OF_MONTH));
+            lineMap.put(key, new String[3]);
+            s.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        System.out.println(lineMap.keySet());
+    }
 }
+
+

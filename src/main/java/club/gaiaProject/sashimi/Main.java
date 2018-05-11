@@ -19,7 +19,7 @@ import club.gaiaProject.sashimi.util.ExcelUtils;
  */
 public class Main {
     public static void main(String[] args) throws Exception {
-        File file = new File("C:\\Users\\73989\\Desktop\\1.xls");
+        File file = new File("/home/magneto/虚拟机/share/1.xls");
         List<EventBean> result = ExcelUtils.getDate(file, 897, true);
         System.out.println("总记录数"+result.size());
         DataHandler handler = new DataHandler(result);
