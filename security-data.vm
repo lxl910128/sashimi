@@ -169,13 +169,13 @@
 </head>
 
 <body>
-<input type="hidden" id="attackDatajson" value='${attackDatajson}'/>
-<input type="hidden" id="allDaysDetailsjson" value='${allDaysDetailsjson}'/>
-<input type="hidden" id="attackVObjectjson" value='${attackVObjectjson}'/>
+<input type="hidden" id="bingData" value='${bingData}'/>
+<input type="hidden" id="lineData" value='${lineData}'/>
+<input type="hidden" id="radarData" value='${radarData}'/>
 
     <!--头部-->
     <div class="l-box">
-        <h1>360星图-安全分析报告[${fromDate}]</h1>
+        <h1>郑州地铁2号线-设备故障分析报告[${fromDate}]</h1>
         <p>日志分析时间:${datetime}</p>
     </div>
     <!--内容-->
@@ -204,7 +204,7 @@
                             <td style="width:20%">
                                 <div class="des-title">疑似检修数</div>
                                 <div class="des-number">${doubtfulCount}</div>
-                                <div class="des-sub-title">阈值${doubtfulThreshold}；间隔时间${doubtfulTime}</div>
+                                <div class="des-sub-title">阈值${doubtfulThreshold}；间隔时间${doubtfulTime}分钟</div>
                             </td>
                             <td style="width: 20%;">
                                 <div class="des-title">午夜检修数</div>
@@ -213,11 +213,11 @@
                             </td>
                             <td style="width: 20%;">
                                 <div class="des-title">统计天数</div>
-                                <div class="des-number">${attackTypeSum}</div>
+                                <div class="des-number">${dateSum}</div>
                             </td>
 <!--                             <td style="width: 20%;">
                                 <div class="des-title">攻击日期</div>
-                                <div class="des-number">${dateSum}</div>
+                                <div class="des-number">${}</div>
                             </td> -->
 
                         </tr>
@@ -573,7 +573,7 @@
     <div id='footer'></div>
     <!--Jquery CDN-->
      <!--<script src="http://libs.baidu.com/jquery/1.9.0/jquery.min.js"></script> -->
-     <script src="../bin/js/jquery.min.js"></script>
+     <script src="js/jquery.min.js"></script>
     <!--点击展开事件-->
     <script>
         function t(c) {
@@ -596,7 +596,7 @@
 		</script>
 
     <!-- <script type="text/javascript" src="http://echarts.baidu.com/doc/example/www2/js/echarts-all.js"></script> -->
-    <script type="text/javascript" src="../bin/js/plug-in.js"></script>
+    <script type="text/javascript" src="js/plug-in.js"></script>
     <script type="text/javascript">
         var theme = {
             // 全图默认背景
@@ -951,12 +951,12 @@
                 alert(param.name + ":" + param.value);
             });
 
-            var attackDatajson = document.getElementById('attackDatajson').value;
-            var myObject = eval("(" + attackDatajson + ")");
+            var bingData = document.getElementById('bingData').value;
+            var myObject = eval("(" + bingData + ")");
 
             myChart.setOption({
                 title: {
-                    text: '漏洞攻击类型分布',
+                    text: '告警设备分析',
                     //subtext: '统计日期：2014-11-24',
                     x: 'center'
                 },
@@ -964,12 +964,6 @@
                     trigger: 'item',
                     formatter: "{a} <br/>{b} : {c} ({d}%)"
                 },
-                /*         	    legend: {
-                                    orient : 'vertical',
-                                    x : 'left',
-                                    data:['struts2远程执行','SQL注入','XSS','SQL盲注','恶意扫描']
-                                    //data:${attack_type_array}
-                                }, */
                 toolbox: {
                     show: false,
                     feature: {
@@ -1020,19 +1014,19 @@
                 alert(param.name + ":" + param.value);
             });
 
-            var allDaysDetailsjson = document.getElementById('allDaysDetailsjson').value;
-            var myObject2 = eval("(" + allDaysDetailsjson + ")");
+            var lineData = document.getElementById('lineData').value;
+            var myObject2 = eval("(" + lineData + ")");
 
             myChart2.setOption({
                 title: {
-                    text: '攻击曲线图',
+                    text: '告警曲线图',
                     //subtext: '纯属虚构'
                 },
                 tooltip: {
                     trigger: 'axis'
                 },
                 legend: {
-                    data: ['漏洞攻击', 'CC攻击']
+                    data: ['总告警', '有效告警','午夜检修','疑似检修']
                 },
                 toolbox: {
                     show: false,
@@ -1050,7 +1044,7 @@
                         type: 'category',
                         boundaryGap: false,
                         //data: ['2012-11-12', '2012-11-13']
-                        data : myObject2.attackDeatilKey
+                        data : myObject2.xData
                     }
                 ],
                 yAxis: [
@@ -1060,20 +1054,36 @@
                 ],
                 series: [
                     {
-                        name: '漏洞攻击',
+                        name: '总告警',
                         type: 'line',
                         smooth: true,
                         itemStyle: { normal: { areaStyle: { type: 'default' } } },
                         //data: [0, 200]
-                        data:myObject2.attackAttackDeatilVal
+                        data:myObject2.all
                     },
                     {
-                        name: 'CC攻击',
+                        name: '有效告警',
                         type: 'line',
                         smooth: true,
                         itemStyle: { normal: { areaStyle: { type: 'default' } } },
                         //data: [100, 0]
-                        data:myObject2.attackCCDeatilVal
+                        data:myObject2.effective
+                    },
+                    {
+                        name: '午夜检修',
+                        type: 'line',
+                        smooth: true,
+                        itemStyle: { normal: { areaStyle: { type: 'default' } } },
+                        //data: [100, 0]
+                        data:myObject2.overhaul
+                    },
+                    {
+                        name: '疑似检修',
+                        type: 'line',
+                        smooth: true,
+                        itemStyle: { normal: { areaStyle: { type: 'default' } } },
+                        //data: [100, 0]
+                        data:myObject2.doubtful
                     }
                 ]
             });
@@ -1086,11 +1096,11 @@
                 alert(param.name + ":" + param.value);
             });
 
-            var attackVObjectjson = document.getElementById('attackVObjectjson').value;
-            var myObject3 = eval("(" + attackVObjectjson + ")");
+            var radarData = document.getElementById('radarData').value;
+            var myObject3 = eval("(" + radarData + ")");
             myChart3.setOption({
             	title : {
-                    text: '攻击目标'
+                    text: '报警设备类型'
                 },
                tooltip : {
                     trigger: 'axis'
@@ -1120,7 +1130,7 @@
                             {text : '文件攻击', max  : 100},
                             {text : '其他攻击', max  : 100}
                         ] */
-                        indicator:myObject3.attackVKeyList
+                        indicator:myObject3.keyList
                     }
                 ],
                 series : [
@@ -1137,7 +1147,7 @@
                         data : [
                             {
                                 //value : [97, 42, 88, 94, 90]
-                                value:myObject3.attackVValList,name : '攻击目标'
+                                value:myObject3.valueList,name : '攻击目标'
                             }
                         ]
                     }
