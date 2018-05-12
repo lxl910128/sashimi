@@ -263,38 +263,23 @@
             </div>
             <!--时间序列-->
             <div id='ShiJianXuLie'>
-                <h2>时间序列</h2>
+                <h2>分析结果</h2>
 
                 <div id='ShiJianXuLie-list'>
                     <div class="content">
                         <div class="wrapper">
                             <div class="main">
-
-                            	<!-- <div class="year">
-                                    <h2><a href="#">2013年<i></i></a></h2>
-                                    <div class="list">
-                                        <ul>
-                                            <li class="cls highlight">
-                                                <p class="date">12月</p>
-                                                <p class="intro">微俱聚V5.4上线微俱聚V5.4上线微俱聚V5.4上线微俱聚V5.4上线微俱聚V5.4上线微俱聚V5.4上线微俱聚V5.4上线微俱聚V5.4上线</p>
-                                            </li>
-                                            <li class="cls">
-                                                <p class="date">11月</p>
-                                                <p class="intro">微俱聚v5.3上线</p>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div> -->
-
                             	<div class="year">
                                     <h2><a href="#">结果概述<i></i></a></h2>
                                     <div class="list">
                                         <ul>
                                             <li class="cls">
-                                                <p class="intro">共分析域名数：${evt_hostSum}个</p>
-                                                <p class="intro">日志时间周期：${evt_datePeriod} 天</p>
-                                                <p class="intro">发现攻击行为总数：${evt_allAttackSum}</p>
-                                                <p class="intro">攻击结束时间：${evt_attackEndTime}，共持续 ${evt_attackLongs}</p>
+                                                <p class="intro">共有分析${dateSum}天${eventCount}条告警日志</p>
+                                                <p class="intro">有效告警${alarmCount}条</p>
+                                                <p class="intro">疑似检修${doubtfulCount}条</p>
+                                                <p class="intro">午夜检修记录${overhaulCount}条</p>
+                                                <p class="intro">共有${evt_subwaySum}个站发生过告警</p>
+
                                                 <p class="intro">&nbsp;</p>
                                             </li>
                                         </ul>
@@ -302,41 +287,20 @@
                                 </div>
 
                                 <div class="year">
-                                    <h2><a href="#">漏洞攻击<i></i></a></h2>
+                                    <h2><a href="#">最值分析<i></i></a></h2>
                                     <div class="list">
-                                        #if ($evt_attack)
                                         <ul>
                                             <li class="cls highlight">
-                                                <p class="intro">共发现 $evt_attack.sumIP 个IP，发起漏洞攻击  $evt_attack.sumAtt 次</p>
-                                                <p class="intro">$evt_attack.firstStartTimeStr，发现第一次web漏洞攻击</p>
-                                                <p class="intro">第一次web漏洞攻击IP是:$evt_attack.firstIp，来自$evt_attack.firstRegion</p>
-                                                <p class="intro">第一次web漏洞攻击是$evt_attack.firstAttackType</p>
-                                                <p class="intro">发起web漏洞攻击最多的IP是:$evt_attack.hotIP，来自$evt_attack.hostRegion</p>
-                                                <p class="intro">web漏洞攻击高峰时段出现在：$evt_attack.hotDayHour点，共受到 $evt_attack.hotDayhourCountStr 攻击</p>
+                                                <p class="intro">告警超过阈值（${limitFoucs}次）的设配有${bad_device}个</p>
+                                                <p class="intro">告警最多的站是${max_subway}，共发出${max_subwayCount}次</p>
+                                                <p class="intro">告警最多的设备类型是${max_deviceType}，共发出${max_deviceConut}次</p>
+                                                <p class="intro">最频繁的告警类型是${max_alarmType}，共发出${max_alarmConut}次</p>
                                                 <p class="intro">&nbsp;</p>
                                             </li>
                                         </ul>
-                                        #end
                                     </div>
                                 </div>
 
-                                <div class="year">
-                                    <h2><a href="#">CC攻击<i></i></a></h2>
-                                    <div class="list">
-                                        #if ($evt_cc)
-                                        <ul>
-                                            <li class="cls highlight">
-                                                <p class="intro">共发现 $evt_cc.sumIP 个IP，发起CC攻击 $evt_cc.sumAtt 次</p>
-                                                <p class="intro">$evt_cc.firstStartTimeStr，发现第一次CC攻击</p>
-                                                <p class="intro">第一次CC攻击的IP是：$evt_cc.firstIp，来自$evt_cc.firstRegion</p>
-                                                <p class="intro">第一次被攻击的URL是 $evt_cc.firstUri，共受到 $evt_cc.firstCount 次攻击</p>
-                                                <p class="intro">发起CC攻击最多的IP是：$evt_cc.hotIP，来自 $evt_cc.hostRegion</p>
-                                                <p class="intro">CC攻击高峰时段出现在：$evt_cc.hotDayHour 点，受 $evt_cc.hotDayhourCountStr 次攻击</p>
-                                            </li>
-                                        </ul>
-                                        #end
-                                    </div>
-                                </div>
 
                             </div>
                         </div>
@@ -345,228 +309,103 @@
             </div>
         </div>
         <div class="right-box">
-            <!--恶意IP-->
-            <div id='EYiIP'>
-                <h2 id="hosts">恶意IP列表(漏洞攻击)</h2>
-                <p></p>
-                <table class="pure-table" ">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>攻击次数</th>
-                            <th>攻击IP</th>
-                            <th>国家/地区</th>
-                            <th>攻击次数占比%</th>
-                            <th style="width: 40%;"><span class="r" onclick="t(this)">◀</span></th>
-                        </tr>
-                    </thead>
-                    <tbody style="word-break: break-all;">
-                        #foreach( $entity in $attackIPRegionList )
-                        	#if($velocityCount<=10)
-                        	<tr>
-                            #else
-	                        <tr class="hide">
-	                        #end
-
-                            <td>$velocityCount</td>
-                            <td style="text-align: right;">$entity.visitStr</td>
-                            <td>$entity.ip</td>
-                            #if($entity.country.indexOf("中国") > -1)
-
-                            <td style="white-space: nowrap;">$entity.country</td>
-                            #else
-
-                            <td style="white-space: nowrap;" class="max">$entity.country</td>
-                            #end
-
-                            <td style="text-align: right;">$entity.visitRate</td>
-                            <td class="graph">
-                                <div class="bar" style="width: $entity.visitRate"></div>
-                            </td>
-                        </tr>
-                        #end
-                    </tbody>
-                </table>
-             </div>
-
-             #if($ccIPRegionList)
-             <div id='EYiIP1'>
-                <h2 id="hosts">恶意IP列表(CC攻击)</h2>
-                <p></p>
-                <table class="pure-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>攻击次数</th>
-                            <th>攻击IP</th>
-                            <th>国家/地区</th>
-                            <th>攻击次数占比%</th>
-                            <th style="width: 40%;"><span class="r" onclick="t(this)">◀</span></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        #foreach( $entity in $ccIPRegionList )
-                        	#if($velocityCount<=10)
-                        	<tr>
-                            #else
-	                        <tr class="hide">
-	                        #end
-
-                            <td>$velocityCount</td>
-                            <td style="text-align: right;">$entity.visitStr</td>
-                            <td>$entity.ip</td>
-                            #if($entity.country.indexOf("中国") > -1)
-
-                            <td style="white-space: nowrap;">$entity.country</td>
-                            #else
-
-                            <td style="white-space: nowrap;" class="max">$entity.country</td>
-                            #end
-
-                            <td style="text-align: right;">$entity.visitRate</td>
-                            <td class="graph">
-                                <div class="bar" style="width: $entity.visitRate"></div>
-                            </td>
-                        </tr>
-                        #end
-                    </tbody>
-                </table>
-            </div>
-            #end
-            <!--攻击类型-->
-            <div id='GongJiLeiXing'>
-            </div>
-
-			<div>
-			<h2 id="EYiIP2">攻击行为统计</h2>
-            <table class="pure-table">
-                <tbody>
-                	<!-- <thead>
-                        <tr>
-                            <td style="border-bottom: 1px solid #999;" colspan="4">攻击行为统计</td>
-                        </tr>
-                    </thead> -->
-                   #foreach($key in $attackTypeMap.keySet())
-                       #if(($velocityCount+3)%4==0)
-                       <tr>
-                        <td>$key <a href="#$key" class="hight"> $attackTypeMap.get($key) 条</td>
-                       #elseif ($velocityCount%4==0 )
-                        <td>$key <a href="#$key" class="hight"> $attackTypeMap.get($key) 条</td>
-                       </tr>
-                       #else
-                       <td>$key <a href="#$key" class="hight"> $attackTypeMap.get($key) 条</td>
-                       #end
-                   #end
-
-                   #if(($attackTypeMap.size()+3)%4==0)
-                   <td>  </td>
-                   <td>  </td>
-                   <td>  </td>
-                   </tr>
-                   #elseif (($attackTypeMap.size()+2)%4==0)
-                   <td>  </td>
-                   <td>  </td>
-                   </tr>
-                   #elseif (($attackTypeMap.size()+1)%4==0)
-                   <td>  </td>
-                   </tr>
-                   #end
-
-
-
-
-
-
-                </tbody>
-            </table>
-            </div>
             <!--高危列表-->
             <div id='GaoWeiLieBiao'>
-                <h2 id="requests" style="padding-bottom: 8px;">漏洞攻击列表</h2>
-                #foreach( $attackTypeObject in $allAttackTypeList )
-                <!-- <p id="${attackTypeObject.typeId}">${attackTypeObject.typeName}</p> -->
-                <table id="${attackTypeObject.typeName}" class="pure-table" style="table-layout: fixed ;">
-                    <thead>
-                    <div style="background: #3D3D3D;border: 1px solid #999;border-bottom: none;height: 32px;line-height: 32px;color: #ffffff;text-indent: 12px">
-                        ${attackTypeObject.typeName}Top10(200条)
-                    </div>
-                    <tr>
-                        <th style="width: 5%;">ID</th>
-                        <th style="width: 12%;">HOST</th>
-                        <th style="width: 12%;">攻击类型</th>
-                        <th style="width: 15%;">IP</th>
-                        <th style="width: 40%;">URL</th>
-                        <th style="width: 5%;">次数</th>
-                        <th style="width: 13%;">时间<span class="r" onclick="t(this)">◀</span></th>
-                    </tr>
-                    </thead>
-                    <tbody style="word-break: break-all;">
-                    #foreach( $entity in $attackTypeObject.typeList )
-	                    #if($velocityCount <= 10)
-	                    <tr>
-	                        <td>$velocityCount</td>
-	                        <td>$entity.host</td>
-	                        <td>$entity.rule</td>
-	                        <td>$entity.ip</td>
-	                        <td>$entity.url</td>
-	                        <td style="text-align:right;">$entity.count</td>
-	                        <td>$entity.starttime</td>
-	                    </tr>
-	                    #elseif($velocityCount <= 200 && $velocityCount>10)
-	                    <tr class="hide">
-	                        <td>$velocityCount</td>
-	                        <td>$entity.host</td>
-	                        <td>$entity.rule</td>
-	                        <td>$entity.ip</td>
-	                        <td>$entity.url</td>
-	                        <td style="text-align:right;">$entity.count</td>
-	                        <td>$entity.starttime</td>
-	                    </tr>
-	                    #end
-                    #end
-                    </tbody>
-                </table>
-				#end
-
-				#if($ccList)
-                <h2 id="requests" style="padding-top: 25px;padding-bottom: 8px;">CC攻击列表(200条)</h2>
-                <table class="pure-table" style="table-layout: fixed">
-                    <thead>
-                    <tr>
-                        <th style="width: 5%">ID</th>
-                        <th style="width: 12%;">HOST</th>
-                        <th style="width: 15%;">IP</th>
-                        <th style="width: 50%;">URI</th>
-                        <th style="width: 5%;">次数</th>
-                        <th style="width: 13%;">时间<span class="r" onclick="t(this)">◀</span></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    #foreach( $entity in $ccList )
-	                    #if($velocityCount <= 200 && $velocityCount>10)
-		                    <tr>
-		                    	<td>$velocityCount</td>
-		                        <td>$entity.host</td>
-		                        <td>$entity.ip</td>
-		                        <td>$entity.url</td>
-		                        <td style="text-align:right;">$entity.count</td>
-		                        <td>$entity.starttime</td>
-		                    </tr>
-	                    #elseif(10< $velocityCount <= 200)
-		                    <tr class="hide">
-		                        <td>$velocityCount</td>
-		                        <td>$entity.host</td>
-		                        <td>$entity.ip</td>
-		                        <td>$entity.url</td>
-		                        <td style="text-align:right;">$entity.count</td>
-		                        <td>$entity.starttime</td>
-		                    </tr>
-		                #end
-                    #end
-                    </tbody>
-                </table>
+                <h2 id="requests" style="padding-bottom: 8px;">高危设备告警</h2>
+                #foreach( $effective in $effectiveList )
+                    <table id="${effective.name}" class="pure-table" style="table-layout: fixed ;">
+                        <thead>
+                        <div style="background: #3D3D3D;border: 1px solid #999;border-bottom: none;height: 32px;line-height: 32px;color: #ffffff;text-indent: 12px">
+                            ${effective.name} 告警${effective.count}次
+                        </div>
+                        <tr>
+                            <th style="width: 8%;">告警等级</th>
+                            <th style="width: 12%;">设备名称</th>
+                            <th style="width: 12%;">设备类型</th>
+                            <th style="width: 15%;">告警区域</th>
+                            <th style="width: 23%;">告警信息</th>
+                            <th style="width: 20%;">告警原因</th>
+                            <th style="width: 12%;">时间<span class="r" onclick="t(this)">◀</span></th>
+                        </tr>
+                        </thead>
+                        <tbody style="word-break: break-all;">
+                            #foreach( $entity in $effective.eventList )
+                                #if($velocityCount <= 10)
+                                <tr>
+                                    <td>$entity.level</td>
+                                    <td>$entity.name</td>
+                                    <td>$entity.type</td>
+                                    <td>$entity.subway</td>
+                                    <td style="text-align:right;">$entity.info</td>
+                                    <td style="text-align:right;">$entity.reason</td>
+                                    <td>$entity.time</td>
+                                </tr>
+                                #elseif($velocityCount <= 200 && $velocityCount>10)
+                                <tr class="hide">
+                                    <td>$entity.level</td>
+                                    <td>$entity.name</td>
+                                    <td>$entity.type</td>
+                                    <td>$entity.subway</td>
+                                    <td style="text-align:right;">$entity.info</td>
+                                    <td style="text-align:right;">$entity.reason</td>
+                                    <td>$entity.time</td>
+                                </tr>
+                                #end
+                            #end
+                        </tbody>
+                    </table>
                 #end
             </div>
+
+            <!--疑似告警-->
+            <div id='doubtful'>
+                <h2 id="requests" style="padding-bottom: 8px;">疑似告警</h2>
+                #foreach( $doubtful in $doubtfulList )
+                    <table id="${doubtful.subway}" class="pure-table" style="table-layout: fixed ;">
+                        <thead>
+                        <div style="background: #3D3D3D;border: 1px solid #999;border-bottom: none;height: 32px;line-height: 32px;color: #ffffff;text-indent: 12px">
+                            ${doubtful.startTime}至${doubtful.endTime} ${doubtful.subway} 发生${doubtful.count}次告警
+                        </div>
+                        <tr>
+                            <th style="width: 8%;">告警等级</th>
+                            <th style="width: 12%;">设备名称</th>
+                            <th style="width: 12%;">设备类型</th>
+                            <th style="width: 15%;">告警区域</th>
+                            <th style="width: 23%;">告警信息</th>
+                            <th style="width: 20%;">告警原因</th>
+                            <th style="width: 12%;">时间<span class="r" onclick="t(this)">◀</span></th>
+                        </tr>
+                        </thead>
+                        <tbody style="word-break: break-all;">
+                            #foreach( $entity in $doubtful.eventList )
+                                #if($velocityCount <= 10)
+                                <tr>
+                                    <td>$entity.level</td>
+                                    <td>$entity.name</td>
+                                    <td>$entity.type</td>
+                                    <td>$entity.subway</td>
+                                    <td style="text-align:right;">$entity.info</td>
+                                    <td style="text-align:right;">$entity.reason</td>
+                                    <td>$entity.time</td>
+                                </tr>
+                                #elseif($velocityCount <= 200 && $velocityCount>10)
+                                <tr class="hide">
+                                    <td>$entity.level</td>
+                                    <td>$entity.name</td>
+                                    <td>$entity.type</td>
+                                    <td>$entity.subway</td>
+                                    <td style="text-align:right;">$entity.info</td>
+                                    <td style="text-align:right;">$entity.reason</td>
+                                    <td>$entity.time</td>
+                                </tr>
+                                #end
+                            #end
+                        </tbody>
+                    </table>
+                #end
+            </div>
+
+
         </div>
     </div>
     <!--底部-->

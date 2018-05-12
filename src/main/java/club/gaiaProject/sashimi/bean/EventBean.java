@@ -1,5 +1,10 @@
 package club.gaiaProject.sashimi.bean;
 
+import club.gaiaProject.sashimi.util.ExcelUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.Date;
+
 /**
  * Created by luoxiaolong on 18-4-28.
  */
@@ -68,5 +73,41 @@ public class EventBean {
 
     public void setHandlerTime(Long handlerTime) {
         this.handlerTime = handlerTime;
+    }
+
+    public EventVO toEventVO() {
+        EventVO ret = new EventVO();
+        if (StringUtils.isNotEmpty(this.alarm.getInfo())) {
+            ret.setInfo(this.alarm.getInfo());
+        }else {
+            ret.setInfo("");
+        }
+        if (StringUtils.isNotEmpty(this.alarm.getLevel())) {
+            ret.setLevel(this.alarm.getLevel());
+        }else {
+            ret.setLevel("");
+        }
+        if (StringUtils.isNotEmpty(this.device.getName())) {
+            ret.setName(this.device.getName());
+        }else {
+            ret.setName("");
+        }
+        if (StringUtils.isNotEmpty(this.alarm.getReason())) {
+            ret.setReason(this.alarm.getReason());
+        }else {
+            ret.setReason("");
+        }
+        if (StringUtils.isNotEmpty(this.device.getSubway())) {
+            ret.setSubway(this.device.getSubway());
+        }else {
+            ret.setSubway("");
+        }
+        if (StringUtils.isNotEmpty(this.device.getTypeName())) {
+            ret.setType(this.device.getTypeName());
+        }else {
+            ret.setType("");
+        }
+        ret.setTime(ExcelUtils.dateTimeFormat.format(new Date(this.timeStamp)));
+        return ret;
     }
 }

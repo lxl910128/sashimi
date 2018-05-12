@@ -1,6 +1,6 @@
 package club.gaiaProject.sashimi;
 
-import club.gaiaProject.sashimi.bean.CountBean;
+import club.gaiaProject.sashimi.bean.*;
 import club.gaiaProject.sashimi.util.ExcelUtils;
 
 import com.alibaba.fastjson.JSON;
@@ -15,9 +15,6 @@ import org.apache.velocity.app.Velocity;
 import java.io.PrintWriter;
 import java.util.*;
 
-import club.gaiaProject.sashimi.bean.AlarmBean;
-import club.gaiaProject.sashimi.bean.DeviceBean;
-import club.gaiaProject.sashimi.bean.EventBean;
 import org.apache.velocity.app.VelocityEngine;
 
 
@@ -33,12 +30,13 @@ public class DataHandler {
     private List<EventBean> overhaulEvents = new ArrayList<EventBean>();//（23 - 5）点的检修记录
     private Calendar calendar = Calendar.getInstance();
     private Map<String, DeviceBean> deviceMapping = new HashMap<String, DeviceBean>();//设备id -> 设备信息
-    private Map<String, List<AlarmBean>> deviceErrorNum = new HashMap<>();//设备ID -> 告警信息
+    private Map<String, List<EventBean>> deviceErrorNum = new HashMap<>();//设备ID -> 告警信息
     private Map<String, Integer> deviceTypeErrorNum = new TreeMap<>();//设备Type -> count
     private List<List<EventBean>> doubtfulOverhulEvents = new ArrayList<List<EventBean>>();//疑似检修
     private Integer alarmCount = 0;//有效报警
     private Integer eventCount = 0; //日志总数
     private Map<String, Integer> stationAlarm = new HashMap<>();//各站报警数
+    private Map<String, Integer> alarm = new HashMap<>();//各级别报警数
     //0 总数， 1 有效告警 2 午夜检修 3 疑似检修
     private Map<String, int[]> lineMap = new TreeMap<>();//构造折线图数据
     //临时记录
@@ -58,9 +56,9 @@ public class DataHandler {
     public void createHTML() throws Exception {
         VelocityEngine velocityEngine = new VelocityEngine();
         Properties properties = new Properties();
-        properties.setProperty("ISO-8859-1", "UTF-8");
-        properties.setProperty("input.encoding", "UTF-8");
-        properties.setProperty("output.encoding", "UTF-8");
+        properties.setProperty(Velocity.ENCODING_DEFAULT, "UTF-8");
+        properties.setProperty(Velocity.INPUT_ENCODING, "UTF-8");
+        properties.setProperty(Velocity.OUTPUT_ENCODING, "UTF-8");
         velocityEngine.init(properties);
 
         Template template = velocityEngine.getTemplate("security-data.vm", "UTF-8");
@@ -113,7 +111,7 @@ public class DataHandler {
         JSONObject bingData = new JSONObject();
         JSONArray typeList = new JSONArray();
         Integer otherSize = 0;
-        for (Map.Entry<String, List<AlarmBean>> entry : deviceErrorNum.entrySet()) {
+        for (Map.Entry<String, List<EventBean>> entry : deviceErrorNum.entrySet()) {
             if (entry.getValue().size() >= limitFoucs) {
                 DeviceBean deviceBean = deviceMapping.get(entry.getKey());
                 JSONObject type = new JSONObject();
@@ -125,8 +123,8 @@ public class DataHandler {
             }
         }
         if (otherSize > 0) {
-            JSONObject type = new JSONObject();
-            type.put("name", new String("其它"));
+            Map<String, Object> type = new HashMap<>();
+            type.put("name", "others");
             type.put("value", otherSize);
             typeList.add(type);
         }
@@ -170,7 +168,7 @@ public class DataHandler {
                 count += listSort.get(i).getValue();
             }
             Map<String, Object> node = new HashedMap();
-            node.put("text", "其他");
+            node.put("text", "others");
             node.put("max", maxValue);
             typeKeyList.add(4, node);
             typeValue.add(4, count);
@@ -179,6 +177,81 @@ public class DataHandler {
         radarData.put("keyList", typeKeyList);
         radarData.put("valueList", typeValue);
         context.put("radarData", radarData.toString());
+
+        //高危设备
+        List<OutputBean> effective = new ArrayList<>();
+        deviceErrorNum.forEach((x, y) -> {
+            if (y.size() >= limitFoucs) {
+                DeviceBean deviceBean = deviceMapping.get(x);
+                OutputBean output = new OutputBean();
+                output.setName(deviceBean.getName());
+                List<EventVO> data = new ArrayList<>();
+                y.forEach(z -> {
+                    data.add(z.toEventVO());
+                });
+                output.setEventList(data);
+                output.setCount(y.size() + "");
+                effective.add(output);
+            }
+        });
+        effective.sort((x, y) -> {
+            return y.getEventList().size() - x.getEventList().size();
+        });
+        context.put("effectiveList", effective);
+
+        //疑似检修
+        List<OutputBean> doubtfulData = new ArrayList<>();
+        for (List<EventBean> events : doubtfulOverhulEvents) {
+            OutputBean doubtful = new OutputBean();
+            List<EventVO> doubtfulList = new ArrayList<>();
+            Long max = null;
+            Long min = null;
+            for (EventBean event : events) {
+                if (doubtful.getSubway() == null) {
+                    doubtful.setSubway(event.getDevice().getSubway());
+                }
+                if (max == null || event.getTimeStamp() > max) {
+                    max = event.getTimeStamp();
+                }
+                if (min == null || event.getTimeStamp() < min) {
+                    min = event.getTimeStamp();
+                }
+                doubtfulList.add(event.toEventVO());
+            }
+            if (max != null) {
+                doubtful.setEndTime(ExcelUtils.dateTimeFormat.format(new Date(max)));
+            } else {
+                doubtful.setEndTime("");
+            }
+            if (min != null) {
+                doubtful.setStartTime(ExcelUtils.dateTimeFormat.format(new Date(min)));
+            } else {
+                doubtful.setStartTime("");
+            }
+            doubtful.setCount(doubtfulList.size() + "");
+            doubtful.setEventList(doubtfulList);
+            doubtfulData.add(doubtful);
+        }
+        context.put("doubtfulList", doubtfulData);
+
+        //生命线
+        context.put("evt_subwaySum", stationAlarmList.size());
+        context.put("max_subway", stationAlarmList.get(0).getName());
+        context.put("max_subwayCount", stationAlarmList.get(0).getValue());
+        context.put("limitFoucs", limitFoucs + "");
+        context.put("bad_device", effective.size() + "");
+        List<Map.Entry<String, Integer>> alarmList = new ArrayList<>(alarm.entrySet());
+        alarmList.sort((x,y)->{
+            return y.getValue().compareTo(x.getValue());
+        });
+        context.put("max_alarmType",alarmList.get(0).getKey());
+        context.put("max_alarmConut",alarmList.get(0).getValue()+1);
+        List<Map.Entry<String, Integer>> deviceTypeList = new ArrayList<>(deviceTypeErrorNum.entrySet());
+        deviceTypeList.sort((x,y)->{
+            return y.getValue().compareTo(x.getValue());
+        });
+        context.put("max_deviceType",deviceTypeList.get(0).getKey());
+        context.put("max_deviceConut",deviceTypeList.get(0).getValue()+1);
 
 
         PrintWriter pw = new PrintWriter("C:\\Users\\Administrator\\Desktop\\out.html", "UTF-8");
@@ -197,7 +270,7 @@ public class DataHandler {
 
         System.out.println("午夜检修告警：" + overhaulEvents.size());
         System.out.println("---有效报警数---");
-        for (Map.Entry<String, List<AlarmBean>> entry : deviceErrorNum.entrySet()) {
+        for (Map.Entry<String, List<EventBean>> entry : deviceErrorNum.entrySet()) {
             System.out.println(deviceMapping.get(entry.getKey()).getSubway() + "  " + deviceMapping.get(entry.getKey()).getName() + "  " + entry.getValue().size());
         }
         System.out.println("————疑似检修数据————");
@@ -307,11 +380,17 @@ public class DataHandler {
 
                 //各个设备有多少次
                 if (deviceErrorNum.containsKey(event.getDevice().getId())) {
-                    deviceErrorNum.get(event.getDevice().getId()).add(event.getAlarm());
+                    deviceErrorNum.get(event.getDevice().getId()).add(event);
                 } else {
-                    List<AlarmBean> alarms = new ArrayList<AlarmBean>();
-                    alarms.add(event.getAlarm());
+                    List<EventBean> alarms = new ArrayList<EventBean>();
+                    alarms.add(event);
                     deviceErrorNum.put(event.getDevice().getId(), alarms);
+                }
+                //告警类型分析
+                if (alarm.containsKey(event.getAlarm().getLevel())) {
+                    alarm.put(event.getAlarm().getLevel(), alarm.get(event.getAlarm().getLevel()) + 1);
+                } else {
+                    alarm.put(event.getAlarm().getLevel(), 1);
                 }
 
                 //有效告警的总数
