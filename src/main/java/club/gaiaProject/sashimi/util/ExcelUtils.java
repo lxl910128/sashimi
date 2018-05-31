@@ -1,24 +1,19 @@
 package club.gaiaProject.sashimi.util;
 
+import club.gaiaProject.sashimi.bean.FixEventBean;
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import club.gaiaProject.sashimi.bean.AlarmBean;
 import club.gaiaProject.sashimi.bean.DeviceBean;
@@ -34,14 +29,9 @@ public class ExcelUtils {
     private static final String EXCEL_XLS = "xls";
     private static final String EXCEL_XLSX = "xlsx";
 
-    public static List<EventBean> getDate(File excel, Integer rowNum, Boolean hasHead) throws IOException {
-        return getDate(excel, rowNum, 15, hasHead);
-    }
+    private static String[] titles = {"告警等级", "告警类别", "设备名称", "设备型号", "设备编号", "设备IP", "设备类型", "告警区域", "设备地址", "告警信息", "告警原因", "告警时间", "告警确认人", "告警确认说明", "告警确认时间"};
 
-    /**
-     * 获取excel
-     */
-    public static List<EventBean> getDate(File excel, Integer rowNum, Integer cellNum, Boolean hasHead) throws IOException {
+    public static Workbook getWB(File excel) throws IOException {
         Workbook wb = null;
         FileInputStream in = new FileInputStream(excel);
         // 关联execl
@@ -53,31 +43,237 @@ public class ExcelUtils {
             System.out.println("文件格式错误！");
             System.exit(-1);
         }
+        return wb;
+    }
+
+    private static Map<String, CellStyle> createStyles(Workbook wb) {
+        Map<String, CellStyle> styles = new HashMap();
+        DataFormat dataFormat = wb.createDataFormat();
+
+        // 标题样式
+        CellStyle titleStyle = wb.createCellStyle();
+        titleStyle.setAlignment(CellStyle.ALIGN_CENTER); // 水平对齐
+        titleStyle.setVerticalAlignment(CellStyle.ALIGN_CENTER); // 垂直对齐
+        titleStyle.setLocked(true);
+        titleStyle.setFillForegroundColor(IndexedColors.BLUE.getIndex());
+        titleStyle.setFillBackgroundColor(IndexedColors.YELLOW.getIndex());
+        Font titleFont = wb.createFont();
+        titleFont.setFontHeightInPoints((short) 16);
+        titleFont.setBold(true);
+        titleFont.setFontName("微软雅黑");
+        titleStyle.setFont(titleFont);
+        styles.put("title", titleStyle);
+
+        // 文件头样式
+        CellStyle headerStyle = wb.createCellStyle();
+        headerStyle.setAlignment(CellStyle.ALIGN_CENTER);
+        headerStyle.setVerticalAlignment(CellStyle.ALIGN_CENTER);
+        headerStyle.setFillForegroundColor(IndexedColors.GREY_50_PERCENT.getIndex());
+        headerStyle.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex());
+        headerStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+        headerStyle.setWrapText(true);
+        Font headerFont = wb.createFont();
+        headerFont.setFontHeightInPoints((short) 12);
+        headerFont.setColor(IndexedColors.WHITE.getIndex());
+        titleFont.setFontName("微软雅黑");
+        headerStyle.setFont(headerFont);
+        styles.put("header", headerStyle);
+
+        // 正文样式
+        CellStyle cellStyle = wb.createCellStyle();
+        cellStyle.setAlignment(CellStyle.ALIGN_CENTER);
+        cellStyle.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
+        cellStyle.setWrapText(true);
+        cellStyle.setBorderRight(CellStyle.BORDER_THIN);
+        cellStyle.setRightBorderColor(IndexedColors.BLACK.getIndex());
+        cellStyle.setBorderLeft(CellStyle.BORDER_THIN);
+        cellStyle.setLeftBorderColor(IndexedColors.BLACK.getIndex());
+        cellStyle.setBorderTop(CellStyle.BORDER_THIN);
+        cellStyle.setTopBorderColor(IndexedColors.BLACK.getIndex());
+        cellStyle.setBorderBottom(CellStyle.BORDER_THIN);
+        cellStyle.setBottomBorderColor(IndexedColors.BLACK.getIndex());
+        styles.put("cell", cellStyle);
+
+        return styles;
+    }
+
+    public static void writeExcel(File file, List<List<EventBean>> list) throws IOException {
+        Workbook wb = null;
+        if(file.getName().contains(EXCEL_XLS)){
+            wb = new HSSFWorkbook();
+        } else {
+            wb = new XSSFWorkbook();
+        }
+
+
+        Sheet sheet = wb.createSheet();
+        sheet.setDefaultColumnWidth(15);
+        Map<String, CellStyle> styles = createStyles(wb);
+        /*
+         * 创建标题行
+         */
+        Row row = sheet.createRow(0);
+        for (int i = 0; i < titles.length; i++) {
+            Cell cell = row.createCell(i);
+            cell.setCellStyle(styles.get("header"));
+            cell.setCellValue(titles[i]);
+        }
+
+        int index = 1;
+        for (List<EventBean> eventBeans : list) {
+            for (EventBean event : eventBeans) {
+                Row newRow = sheet.createRow(index);
+                Iterator<Cell> cellIterator = event.getRow().cellIterator();
+                int cellIndex = 0;
+                while (cellIterator.hasNext()) {
+                    Cell newCell = newRow.createCell(cellIndex);
+                    Cell cell = cellIterator.next();
+                    if (cell != null) {
+                        newCell.setCellStyle(styles.get("cell"));
+                        newCell.setCellValue(cell.getStringCellValue());
+                    }
+
+                    cellIndex++;
+                }
+                index++;
+            }
+
+        }
+        // 如果文件存在,则删除已有的文件,重新创建一份新的
+        file.createNewFile();
+        OutputStream outputStream = null;
+        try {
+            outputStream = new FileOutputStream(file);
+            wb.write(outputStream);
+        } catch (IOException e) {
+            MyLogger.error(e.getMessage());
+        } finally {
+            try {
+                if (null != outputStream) {
+                    outputStream.close();
+                }
+            } catch (IOException e) {
+                MyLogger.error(e.getMessage());
+            }
+        }
+
+    }
+
+    public static Map<String, List<FixEventBean>> getFixEvent(File excel) throws IOException {
+        Workbook wb = getWB(excel);
+        Map<String, List<FixEventBean>> ret = new HashMap<>();
+
+        Sheet st = wb.getSheetAt(0);
+        Iterator<Row> rowIterator = st.rowIterator();
+
+        int rowIndex = 0;
+        while (rowIterator.hasNext()) {
+            if (rowIndex == 0) {
+                rowIndex++;
+                rowIterator.next();
+                continue;
+            }
+            //取行
+            Row row = rowIterator.next();
+            if (row == null) {
+                continue;
+            }
+            FixEventBean fixEvent = new FixEventBean();
+            boolean nullRowFlag = false;
+            for (int columnIndex = 0; columnIndex < 3; columnIndex++) {
+                Cell cell = row.getCell(columnIndex);
+
+                if (cell != null) {
+                    switch (columnIndex) {
+                        case 0:
+                            Long start = (Long) getCellValue(cell, true);
+                            if (start == null) {
+                                nullRowFlag = true;
+                            }
+                            fixEvent.setStartTime(start);
+                            break;
+                        case 1:
+                            Long end = (Long) getCellValue(cell, true);
+                            if (end == null) {
+                                nullRowFlag = true;
+                            }
+                            fixEvent.setEndTime(end);
+                            break;
+                        case 2:
+                            String subway = (String) getCellValue(cell, false);
+                            if (subway == null) {
+                                nullRowFlag = true;
+                            }
+                            fixEvent.setSubway(subway);
+                            break;
+                    }
+                }
+            }
+            if (nullRowFlag) {
+                continue;
+            } else {
+                if (fixEvent.getStartTime() <= fixEvent.getEndTime()) {
+                    if (ret.containsKey(fixEvent.getSubway())) {
+                        ret.get(fixEvent.getSubway()).add(fixEvent);
+                    } else {
+                        List<FixEventBean> listFix = new ArrayList<>();
+                        listFix.add(fixEvent);
+                        ret.put(fixEvent.getSubway(), listFix);
+                    }
+                } else {
+                    MyLogger.info(String.format("第%d条检修记录的开始时间大于结束时间，舍弃", rowIndex));
+                }
+            }
+            rowIndex++;
+        }
+        return ret;
+    }
+
+    public static List<EventBean> getDate(File excel, Boolean hasHead) throws IOException {
+        return getDate(excel, 15, hasHead);
+    }
+
+    /**
+     * 获取excel
+     */
+    public static List<EventBean> getDate(File excel, Integer cellNum, Boolean hasHead) throws IOException {
+        Workbook wb = getWB(excel);
         List<EventBean> ret = new ArrayList<EventBean>();
         //遍历 sheet
         for (int sheetIndex = 0; sheetIndex < wb.getNumberOfSheets(); sheetIndex++) {
             //取sheet
             Sheet st = wb.getSheetAt(sheetIndex);
+            Iterator<Row> rowIterator = st.rowIterator();
             //遍历行
             int rowIndex = 0;
-            if (hasHead) rowIndex = 1;
-            for (; rowIndex < rowNum; rowIndex++) {
-
+            while (rowIterator.hasNext()) {
+                if (rowIndex == 0 && hasHead) {
+                    rowIndex++;
+                    rowIterator.next();
+                    continue;
+                }
                 //取行
-                Row row = st.getRow(rowIndex);
+                Row row = rowIterator.next();
                 if (row == null) {
                     continue;
                 }
 
-                EventBean rowInfo = new EventBean();
+                EventBean rowInfo = new EventBean(row);
                 DeviceBean device = new DeviceBean();
                 AlarmBean alarm = new AlarmBean();
+                boolean nullRowFlag = false;
                 for (int columnIndex = 0; columnIndex < cellNum; columnIndex++) {
                     Cell cell = row.getCell(columnIndex);
                     if (cell != null) {
                         switch (columnIndex) {
                             case 0:
-                                alarm.setLevel((String) getCellValue(cell, false));
+                                String level = (String) getCellValue(cell, false);
+                                //如果第一列为空怎代表这行没数据
+                                if (level == null) {
+
+                                    nullRowFlag = true;
+                                }
+                                alarm.setLevel(level);
                                 break;
                             case 1:
                                 alarm.setType((String) getCellValue(cell, false));
@@ -124,10 +320,15 @@ public class ExcelUtils {
                         }
                     }
                 }
-                rowInfo.setAlarm(alarm);
-                rowInfo.setDevice(device);
-                rowInfo.setId(rowIndex);
-                ret.add(rowInfo);
+                if (nullRowFlag) {
+                    MyLogger.info(String.format("第%d无首列，判定为空行并舍弃", rowIndex + 1));
+                } else {
+                    rowInfo.setAlarm(alarm);
+                    rowInfo.setDevice(device);
+                    rowInfo.setId(rowIndex);
+                    ret.add(rowInfo);
+                }
+                rowIndex++;
             }
         }
         ret.sort((x, y) -> {

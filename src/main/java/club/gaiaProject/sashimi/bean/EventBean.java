@@ -2,6 +2,7 @@ package club.gaiaProject.sashimi.bean;
 
 import club.gaiaProject.sashimi.util.ExcelUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.usermodel.Row;
 
 import java.util.Date;
 
@@ -16,6 +17,8 @@ public class EventBean {
     private String handler;//告警确认人
     private String handlerInfo;//告警确认说明
     private Long handlerTime;//告警确认时间
+
+    private Row row;//原始行
 
     private Integer id;//标示 ID
 
@@ -75,6 +78,14 @@ public class EventBean {
         this.handlerTime = handlerTime;
     }
 
+    public Row getRow() {
+        return row;
+    }
+
+    public void setRow(Row row) {
+        this.row = row;
+    }
+
     public EventVO toEventVO() {
         EventVO ret = new EventVO();
         if (StringUtils.isNotEmpty(this.alarm.getInfo())) {
@@ -109,5 +120,9 @@ public class EventBean {
         }
         ret.setTime(ExcelUtils.dateTimeFormat.format(new Date(this.timeStamp)));
         return ret;
+    }
+
+    public EventBean(Row row){
+        this.row= row;
     }
 }

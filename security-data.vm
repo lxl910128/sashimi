@@ -207,9 +207,8 @@
                                 <div class="des-sub-title">阈值${doubtfulThreshold}；间隔时间${doubtfulTime}分钟</div>
                             </td>
                             <td style="width: 20%;">
-                                <div class="des-title">午夜检修数</div>
+                                <div class="des-title">设备检修数</div>
                                 <div class="des-number">${overhaulCount}</div>
-                                <div class="des-sub-title">晚23点到早4点的告警</div>
                             </td>
                             <td style="width: 20%;">
                                 <div class="des-title">统计天数</div>
@@ -277,7 +276,7 @@
                                                 <p class="intro">共有分析${dateSum}天${eventCount}条告警日志</p>
                                                 <p class="intro">有效告警${alarmCount}条</p>
                                                 <p class="intro">疑似检修${doubtfulCount}条</p>
-                                                <p class="intro">午夜检修记录${overhaulCount}条</p>
+                                                <p class="intro">设备检修记录${overhaulCount}条</p>
                                                 <p class="intro">共有${evt_subwaySum}个站发生过告警</p>
 
                                                 <p class="intro">&nbsp;</p>
@@ -865,7 +864,7 @@
                     trigger: 'axis'
                 },
                 legend: {
-                    data: ['总告警', '有效告警','午夜检修','疑似检修']
+                    data: ['总告警', '有效告警','设备检修','疑似检修']
                 },
                 toolbox: {
                     show: false,
@@ -909,7 +908,7 @@
                         data:myObject2.effective
                     },
                     {
-                        name: '午夜检修',
+                        name: '设备检修',
                         type: 'line',
                         smooth: true,
                         itemStyle: { normal: { areaStyle: { type: 'default' } } },

@@ -12,6 +12,7 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.util.*;
 
@@ -49,11 +50,26 @@ public class DataHandler {
 
     private Integer limitFoucs = 0;//某类设备有效告警超过此值即为 重点关注对象
 
-    public DataHandler(List<EventBean> events) {
-        this.events = events;
+    private Map<String, List<FixEventBean>> fixEvent;
+
+    public List<List<EventBean>> getDoubtfulOverhulEvents() {
+        return doubtfulOverhulEvents;
     }
 
-    public void createHTML() throws Exception {
+    public DataHandler(List<EventBean> events, Map<String, List<FixEventBean>> fixEvent) {
+        this.events = events;
+        this.fixEvent = fixEvent;
+    }
+
+    public void outputExcel(File file) throws Exception{
+        if(file.exists()){
+            file.delete();
+        }
+        file.createNewFile();
+
+    }
+
+    public void createHTML(File file) throws Exception {
         VelocityEngine velocityEngine = new VelocityEngine();
         Properties properties = new Properties();
         properties.setProperty(Velocity.ENCODING_DEFAULT, "UTF-8");
@@ -241,20 +257,23 @@ public class DataHandler {
         context.put("limitFoucs", limitFoucs + "");
         context.put("bad_device", effective.size() + "");
         List<Map.Entry<String, Integer>> alarmList = new ArrayList<>(alarm.entrySet());
-        alarmList.sort((x,y)->{
+        alarmList.sort((x, y) -> {
             return y.getValue().compareTo(x.getValue());
         });
-        context.put("max_alarmType",alarmList.get(0).getKey());
-        context.put("max_alarmConut",alarmList.get(0).getValue()+1);
+        context.put("max_alarmType", alarmList.get(0).getKey());
+        context.put("max_alarmConut", alarmList.get(0).getValue() + 1);
         List<Map.Entry<String, Integer>> deviceTypeList = new ArrayList<>(deviceTypeErrorNum.entrySet());
-        deviceTypeList.sort((x,y)->{
+        deviceTypeList.sort((x, y) -> {
             return y.getValue().compareTo(x.getValue());
         });
-        context.put("max_deviceType",deviceTypeList.get(0).getKey());
-        context.put("max_deviceConut",deviceTypeList.get(0).getValue()+1);
+        context.put("max_deviceType", deviceTypeList.get(0).getKey());
+        context.put("max_deviceConut", deviceTypeList.get(0).getValue() + 1);
 
 
-        PrintWriter pw = new PrintWriter("C:\\Users\\Administrator\\Desktop\\out.html", "UTF-8");
+        if(!file.exists()){
+            file.createNewFile();
+        }
+        PrintWriter pw = new PrintWriter(file, "UTF-8");
         template.merge(context, pw);
         pw.close();
 
@@ -452,11 +471,25 @@ public class DataHandler {
 
 
     //0-4 23以后 设备检修 判定为 午夜检修
-    private Boolean checkDeviceOverhaul(EventBean eventBean) {
+    /*private Boolean checkDeviceOverhaul(EventBean eventBean) {
+
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         if (hour < 4 || hour >= 23) {
             overhaulEvents.add(eventBean);
             return true;
+        }
+        return false;
+    }*/
+
+    private Boolean checkDeviceOverhaul(EventBean eventBean) {
+        if (this.fixEvent.containsKey(eventBean.getDevice().getSubway())) {
+            List<FixEventBean> fixList = this.fixEvent.get(eventBean.getDevice().getSubway());
+            for (FixEventBean fix : fixList) {
+                if (fix.getStartTime() <= eventBean.getTimeStamp() && eventBean.getTimeStamp() <= fix.getEndTime()) {
+                    overhaulEvents.add(eventBean);
+                    return true;
+                }
+            }
         }
         return false;
     }
