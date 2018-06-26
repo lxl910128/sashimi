@@ -56,13 +56,14 @@ public class DataHandler {
         return doubtfulOverhulEvents;
     }
 
+
     public DataHandler(List<EventBean> events, Map<String, List<FixEventBean>> fixEvent) {
         this.events = events;
         this.fixEvent = fixEvent;
     }
 
-    public void outputExcel(File file) throws Exception{
-        if(file.exists()){
+    public void outputExcel(File file) throws Exception {
+        if (file.exists()) {
             file.delete();
         }
         file.createNewFile();
@@ -269,8 +270,21 @@ public class DataHandler {
         context.put("max_deviceType", deviceTypeList.get(0).getKey());
         context.put("max_deviceConut", deviceTypeList.get(0).getValue() + 1);
 
-
-        if(!file.exists()){
+        //高危设备统计
+        List<DeviceBean> gaoweiCount = new ArrayList<>();
+        deviceErrorNum.forEach((x, y) -> {
+            Integer count = y.size();
+            if (count >= limitFoucs) {
+                DeviceBean d = y.get(0).getDevice();
+                d.setCount(count);
+                gaoweiCount.add(d);
+            }
+        });
+        gaoweiCount.sort((x, y) -> {
+            return y.getCount() - x.getCount();
+        });
+        context.put("gaoweiCount", gaoweiCount);
+        if (!file.exists()) {
             file.createNewFile();
         }
         PrintWriter pw = new PrintWriter(file, "UTF-8");

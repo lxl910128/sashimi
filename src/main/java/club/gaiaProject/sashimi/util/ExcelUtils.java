@@ -99,7 +99,7 @@ public class ExcelUtils {
 
     public static void writeExcel(File file, List<List<EventBean>> list) throws IOException {
         Workbook wb = null;
-        if(file.getName().contains(EXCEL_XLS)){
+        if (file.getName().contains(EXCEL_XLS)) {
             wb = new HSSFWorkbook();
         } else {
             wb = new XSSFWorkbook();
@@ -137,7 +137,6 @@ public class ExcelUtils {
                 }
                 index++;
             }
-
         }
         // 如果文件存在,则删除已有的文件,重新创建一份新的
         file.createNewFile();

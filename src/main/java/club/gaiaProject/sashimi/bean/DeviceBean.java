@@ -8,9 +8,19 @@ public class DeviceBean {
     private String name;//设备名称
     private String ip;//设备IP
     private String typeID;//设备类型id
-    private String typeName;//设备名称
+    private String typeName;//设备类型名称
     private String address;//设备地址
     private String subway;//设备站点
+
+    private Integer count;
+
+    public Integer getCount() {
+        return count;
+    }
+
+    public void setCount(Integer count) {
+        this.count = count;
+    }
 
     public String getId() {
         return id;

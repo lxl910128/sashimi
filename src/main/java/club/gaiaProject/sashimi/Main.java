@@ -19,6 +19,7 @@ public class Main {
         File fixData = new File("C:\\Users\\Administrator\\Desktop\\2.xls");
         File out = new File("C:\\Users\\Administrator\\Desktop\\out.html");
         File outExcel = new File("C:\\Users\\Administrator\\Desktop\\3.xls");
+
         Map<String, List<FixEventBean>> fixEvent = ExcelUtils.getFixEvent(fixData);
         MyLogger.info("预计检修记录共有：" + fixEvent.size());
         List<EventBean> result = ExcelUtils.getDate(data, true);
