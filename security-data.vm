@@ -874,6 +874,48 @@
         </div>
     </div>
     <div class="right-box">
+        <!-- 分析表 -->
+        <div id='analysisBiao'>
+            <h2 id="requests" style="padding-bottom: 8px;">结果分析</h2>
+
+            <table id="errorDirver" class="pure-table" style="table-layout: fixed ;">
+                <thead>
+                <div style="background: #3D3D3D;border: 1px solid #999;border-bottom: none;height: 32px;line-height: 32px;color: #ffffff;text-indent: 12px">
+                </div>
+                <tr>
+                    <th style="width: 10%;">设备站名</th>
+                    <th style="width: 10%;">设备类型名称</th>
+                    <th style="width: 15%;">设备名称</th>
+                    <th style="width: 30%;">分析结果</th>
+                    <th style="width: 35%;">处理措施 <span class="r" onclick="t(this)">◀</span></th>
+                </tr>
+                </thead>
+
+                <tbody style="word-break: break-all;">
+                    #foreach( $d in $fistTable )
+                        #if($velocityCount <= 10)
+                        <tr>
+                            <td>$d.subway</td>
+                            <td>$d.type</td>
+                            <td>$d.deviceName</td>
+                            <td>$d.analysisInfo</td>
+                            <td>$d.handlerInfo</td>
+                        </tr>
+                        #elseif($velocityCount <= 200 && $velocityCount>10)
+                        <tr class="hide">
+                            <td>$d.subway</td>
+                            <td>$d.type</td>
+                            <td>$d.deviceName</td>
+                            <td>$d.analysisInfo</td>
+                            <td>$d.handlerInfo</td>
+                        </tr>
+                        #end
+                    #end
+                </tbody>
+
+            </table>
+        </div>
+
         <!-- 超过阈值设备统计 -->
         <div id='GaoWeiLieBiao'>
             <h2 id="requests" style="padding-bottom: 8px;">高危设备统计</h2>
@@ -888,30 +930,30 @@
                     <th style="width: 20%;">设备类型id</th>
                     <th style="width: 25%;">设备地址</th>
                     <th style="width: 20%;">设备站点</th>
-                    <th style="width: 15%;">计数<span class="r" onclick="t(this)">◀</span></th>
+                    <th style="width: 15%;">告警结果统计<span class="r" onclick="t(this)">◀</span></th>
                 </tr>
                 </thead>
 
                 <tbody style="word-break: break-all;">
                     #foreach( $d in $gaoweiCount )
                         #if($velocityCount <= 10)
-                            <tr>
-                                <td>$d.name</td>
-                                <td>$d.typeName</td>
-                                <td>$d.typeID</td>
-                                <td>$d.address</td>
-                                <td>$d.subway</td>
-                                <td>$d.count</td>
-                            </tr>
+                        <tr>
+                            <td>$d.name</td>
+                            <td>$d.typeName</td>
+                            <td>$d.typeID</td>
+                            <td>$d.address</td>
+                            <td>$d.subway</td>
+                            <td>$d.count</td>
+                        </tr>
                         #elseif($velocityCount <= 200 && $velocityCount>10)
-                            <tr class="hide">
-                                <td>$d.name</td>
-                                <td>$d.typeName</td>
-                                <td>$d.typeID</td>
-                                <td>$d.address</td>
-                                <td>$d.subway</td>
-                                <td>$d.count</td>
-                            </tr>
+                        <tr class="hide">
+                            <td>$d.name</td>
+                            <td>$d.typeName</td>
+                            <td>$d.typeID</td>
+                            <td>$d.address</td>
+                            <td>$d.subway</td>
+                            <td>$d.count</td>
+                        </tr>
                         #end
                     #end
                 </tbody>

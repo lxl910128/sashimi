@@ -8,15 +8,21 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.formula.functions.Even;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.velocity.app.VelocityEngine;
+
+import static sun.plugin.cache.FileVersion.regEx;
 
 
 /**
@@ -49,8 +55,11 @@ public class DataHandler {
     private static Integer LIMIT_ERROR_NUM = 5;//最小报警数
 
     private Integer limitFoucs = 0;//某类设备有效告警超过此值即为 重点关注对象
+    private Integer limitDeviceFoucs = 4;//某类设备有效告警超过此值即为 重点关注对象
 
     private Map<String, List<FixEventBean>> fixEvent;
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
     public List<List<EventBean>> getDoubtfulOverhulEvents() {
         return doubtfulOverhulEvents;
@@ -246,6 +255,13 @@ public class DataHandler {
                 doubtful.setStartTime("");
             }
             doubtful.setCount(doubtfulList.size() + "");
+            doubtfulList.sort((x, y) -> {
+                if (x.getTime().equals(y.getTime())) {
+                    return x.getName().compareTo(y.getName());
+                } else {
+                    return x.getTime().compareTo(y.getTime());
+                }
+            });
             doubtful.setEventList(doubtfulList);
             doubtfulData.add(doubtful);
         }
@@ -287,11 +303,133 @@ public class DataHandler {
         if (!file.exists()) {
             file.createNewFile();
         }
+
+
+        //新表
+        List<AnalysisBean> fistTable = new ArrayList<>();
+        deviceErrorNum.forEach((x, y) -> {
+            DeviceBean device = y.get(0).getDevice();
+            AnalysisBean analysisBean = new AnalysisBean();
+            analysisBean.setSubway(device.getSubway());
+            analysisBean.setType(device.getUserDefinedType());
+            analysisBean.setDeviceName(device.getName());
+            // 摄录设备 超过阈值
+            if (checkDeviceType(device.getName()) && y.size() >= limitFoucs) {
+                Float fenshu = ((float) y.size()) / limitFoucs;
+                analysisBean.setAnalysisInfo(String.format("告警次数%d,超出告警阈值%d", y.size(), (Math.round(fenshu * 100))) + "%");
+                analysisBean.setHandlerInfo("排查该摄像机各个节点是否存在接头接触不良/损坏等现象");
+                fistTable.add(analysisBean);
+            }
+            // 视频传输设备
+            if (!checkDeviceType(device.getName())) {
+                analysisBean.setAnalysisInfo("设备告警,次数" + y.size());
+                analysisBean.setHandlerInfo("关注设备接电/工作状态");
+                fistTable.add(analysisBean);
+            }
+        });
+        // 疑似数据添加新表
+        doubtfulOverhulEvents.forEach((x) -> {
+            List<AnalysisBean> get = getAnalysis(x);
+            fistTable.addAll(get);
+        });
+        context.put("fistTable", fistTable);
+
         PrintWriter pw = new PrintWriter(file, "UTF-8");
         template.merge(context, pw);
         pw.close();
 
 
+    }
+
+    private List<AnalysisBean> getAnalysis(List<EventBean> input) {
+        List<AnalysisBean> ret = new ArrayList<>();
+        Map<Long, List<EventBean>> tmp = new HashMap<>();
+        for (EventBean event : input) {
+            event.setTmpName(getNumInDevName(event.getDevice().getName()));
+            if (tmp.containsKey(event.getTimeStamp())) {
+                tmp.get(event.getTimeStamp()).add(event);
+            } else {
+                List<EventBean> newList = new ArrayList<>();
+                newList.add(event);
+                tmp.put(event.getTimeStamp(), newList);
+            }
+        }
+
+        tmp.forEach((x, y) -> {
+            y.sort((o1, o2) -> {
+                Integer r = o1.getTmpName() - o2.getTmpName();
+                return r;
+            });
+        });
+
+        for (List<EventBean> list : tmp.values()) {
+            int flag = 0;
+            Integer tmpName = null;
+            List<EventBean> tmpList = new ArrayList<>();
+            StringBuffer fusionName = new StringBuffer();
+            for (EventBean eventBean : list) {
+                if (eventBean.getTmpName() == -1) {
+                    continue;
+                }
+                if (tmpName == null) {
+                    fusionName.append(eventBean.getDevice().getName()).append(" ");
+                    tmpName = eventBean.getTmpName();
+                    tmpList.add(eventBean);
+                    flag++;
+                    continue;
+                }
+                Integer aa = tmpName - eventBean.getTmpName();
+                if (aa == 1 || aa == -1) {
+                    fusionName.append(eventBean.getDevice().getName()).append(" ");
+                    tmpName = eventBean.getTmpName();
+                    tmpList.add(eventBean);
+                    flag++;
+                    continue;
+                } else {
+                    if (flag >= 4) {
+                        DeviceBean device = eventBean.getDevice();
+                        AnalysisBean analysisBean = new AnalysisBean();
+                        analysisBean.setSubway(device.getSubway());
+                        analysisBean.setType(device.getUserDefinedType());
+                        analysisBean.setAnalysisInfo("设备：" + fusionName.toString() + timeFormat.format(new Date(eventBean.getTimeStamp())) + "同时告警");
+                        analysisBean.setHandlerInfo("建议检查上游设备，排查隔离地单元/字符串叠加分配器设备接电/工作状态");
+                        analysisBean.setDeviceName(" ");
+                        ret.add(analysisBean);
+                    }
+                    flag = 1;
+                    tmpName = eventBean.getTmpName();
+                    tmpList.clear();
+                    fusionName.delete(0, fusionName.length() - 1);
+                    fusionName.append(eventBean.getDevice().getName()).append(";");
+                    tmpList.add(eventBean);
+                }
+            }
+            if (flag >= 4) {
+                DeviceBean device = list.get(0).getDevice();
+                AnalysisBean analysisBean = new AnalysisBean();
+                analysisBean.setSubway(device.getSubway());
+                analysisBean.setType(device.getUserDefinedType());
+                analysisBean.setAnalysisInfo("设备：" + fusionName.toString() + timeFormat.format(new Date(list.get(0).getTimeStamp())) + "同时告警");
+                analysisBean.setHandlerInfo("建议检查上游设备，排查隔离地单元/字符串叠加分配器设备接电/工作状态");
+                analysisBean.setDeviceName(" ");
+                ret.add(analysisBean);
+            }
+        }
+
+        return ret;
+    }
+
+
+    private Integer getNumInDevName(String name) {
+        String regEx = "[^0-9]";
+        Pattern p = Pattern.compile(regEx);
+        Matcher m = p.matcher(name);
+        String newName = m.replaceAll("").trim();
+        if (StringUtils.isNotEmpty(newName)) {
+            return Integer.valueOf(m.replaceAll("").trim());
+        } else {
+            return -1;
+        }
     }
 
     public void print() {
@@ -388,7 +526,12 @@ public class DataHandler {
         for (EventBean event : events) {
             calendar.setTimeInMillis(event.getTimeStamp());
             String key = getDateKey(calendar);
-
+            //设备类型
+            if (checkDeviceType(event.getDevice().getName())) {
+                event.getDevice().setUserDefinedType("视频摄录设备");
+            } else {
+                event.getDevice().setUserDefinedType("视频传输设备");
+            }
             if (!doubtfulEventsId.contains(event.getId())) {//非疑似报警
                 lineMap.get(key)[1] = lineMap.get(key)[1] + 1;
 
@@ -409,7 +552,6 @@ public class DataHandler {
                 } else {
                     deviceTypeErrorNum.put(typeName, 1);
                 }
-
 
                 //各个设备有多少次
                 if (deviceErrorNum.containsKey(event.getDevice().getId())) {
@@ -432,6 +574,14 @@ public class DataHandler {
                 //折线图 疑似告警+1
                 lineMap.get(key)[3] = lineMap.get(key)[3] + 1;
             }
+        }
+    }
+
+    private boolean checkDeviceType(String deviceName) {
+        if (deviceName.startsWith("ZM")) {
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -509,13 +659,7 @@ public class DataHandler {
     }
 
     private String getDateKey(Calendar s) {
-        Integer day = s.get(Calendar.DAY_OF_MONTH);
-        if (day < 10) {
-            return String.format("%s-%s-0%s", s.get(Calendar.YEAR), s.get(Calendar.MONTH), s.get(Calendar.DAY_OF_MONTH));
-        } else {
-            return String.format("%s-%s-%s", s.get(Calendar.YEAR), s.get(Calendar.MONTH), s.get(Calendar.DAY_OF_MONTH));
-        }
-
+        return dateFormat.format(s.getTime());
     }
 
     public static void main(String[] args) {

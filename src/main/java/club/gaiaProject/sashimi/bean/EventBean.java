@@ -22,6 +22,16 @@ public class EventBean {
 
     private Integer id;//标示 ID
 
+    private Integer tmpName;//从deviceName中抽取的临时名字
+
+    public Integer getTmpName() {
+        return tmpName;
+    }
+
+    public void setTmpName(Integer tmpName) {
+        this.tmpName = tmpName;
+    }
+
     public Integer getId() {
         return id;
     }

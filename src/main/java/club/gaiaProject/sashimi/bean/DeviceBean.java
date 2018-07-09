@@ -12,7 +12,17 @@ public class DeviceBean {
     private String address;//设备地址
     private String subway;//设备站点
 
+    private String userDefinedType;//用户自定义类型
+
     private Integer count;
+
+    public String getUserDefinedType() {
+        return userDefinedType;
+    }
+
+    public void setUserDefinedType(String userDefinedType) {
+        this.userDefinedType = userDefinedType;
+    }
 
     public Integer getCount() {
         return count;
