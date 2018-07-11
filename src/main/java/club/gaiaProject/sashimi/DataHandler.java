@@ -29,40 +29,46 @@ import static sun.plugin.cache.FileVersion.regEx;
  * Created by luoxiaolong on 18-4-28.
  */
 public class DataHandler {
-    private List<EventBean> events;//execl ä¸­çš„å…¨éƒ¨è®°å½•
+    private List<EventBean> events;//execl ÖĞµÄÈ«²¿¼ÇÂ¼
     private Long startTime;
     private Long endTime;
     private Integer dayCount;
-    //é‡‡é›†ä¿¡æ¯
-    private List<EventBean> overhaulEvents = new ArrayList<EventBean>();//ï¼ˆ23 - 5ï¼‰ç‚¹çš„æ£€ä¿®è®°å½•
+    //²É¼¯ĞÅÏ¢
+    private List<EventBean> overhaulEvents = new ArrayList<EventBean>();//£¨23 - 5£©µãµÄ¼ìĞŞ¼ÇÂ¼
     private Calendar calendar = Calendar.getInstance();
-    private Map<String, DeviceBean> deviceMapping = new HashMap<String, DeviceBean>();//è®¾å¤‡id -> è®¾å¤‡ä¿¡æ¯
-    private Map<String, List<EventBean>> deviceErrorNum = new HashMap<>();//è®¾å¤‡ID -> å‘Šè­¦ä¿¡æ¯
-    private Map<String, Integer> deviceTypeErrorNum = new TreeMap<>();//è®¾å¤‡Type -> count
-    private List<List<EventBean>> doubtfulOverhulEvents = new ArrayList<List<EventBean>>();//ç–‘ä¼¼æ£€ä¿®
-    private Integer alarmCount = 0;//æœ‰æ•ˆæŠ¥è­¦
-    private Integer eventCount = 0; //æ—¥å¿—æ€»æ•°
-    private Map<String, Integer> stationAlarm = new HashMap<>();//å„ç«™æŠ¥è­¦æ•°
-    private Map<String, Integer> alarm = new HashMap<>();//å„çº§åˆ«æŠ¥è­¦æ•°
-    //0 æ€»æ•°ï¼Œ 1 æœ‰æ•ˆå‘Šè­¦ 2 åˆå¤œæ£€ä¿® 3 ç–‘ä¼¼æ£€ä¿®
-    private Map<String, int[]> lineMap = new TreeMap<>();//æ„é€ æŠ˜çº¿å›¾æ•°æ®
-    //ä¸´æ—¶è®°å½•
-    private Map<String, Long> subwayErrorTime = new HashMap<String, Long>();//æ¯ä¸ªç«™æœ€åä¸€æ¬¡æŠ¥è­¦æ—¶é—´
+    private Map<String, DeviceBean> deviceMapping = new HashMap<String, DeviceBean>();//Éè±¸id -> Éè±¸ĞÅÏ¢
+    private Map<String, List<EventBean>> deviceErrorNum = new HashMap<>();//Éè±¸ID -> ¸æ¾¯ĞÅÏ¢
+    private Map<String, Integer> deviceTypeErrorNum = new TreeMap<>();//Éè±¸Type -> count
+    private List<List<EventBean>> doubtfulOverhulEvents = new ArrayList<List<EventBean>>();//ÒÉËÆ¼ìĞŞ
+    private Integer alarmCount = 0;//ÓĞĞ§±¨¾¯
+    private Integer eventCount = 0; //ÈÕÖ¾×ÜÊı
+    private Map<String, Integer> stationAlarm = new HashMap<>();//¸÷Õ¾±¨¾¯Êı
+    private Map<String, Integer> alarm = new HashMap<>();//¸÷¼¶±ğ±¨¾¯Êı
+    //0 ×ÜÊı£¬ 1 ÓĞĞ§¸æ¾¯ 2 ÎçÒ¹¼ìĞŞ 3 ÒÉËÆ¼ìĞŞ
+    private Map<String, int[]> lineMap = new TreeMap<>();//¹¹ÔìÕÛÏßÍ¼Êı¾İ
+    //ÁÙÊ±¼ÇÂ¼
+    private Map<String, Long> subwayErrorTime = new HashMap<String, Long>();//Ã¿¸öÕ¾×îºóÒ»´Î±¨¾¯Ê±¼ä
     private Map<String, List<EventBean>> subwayErrorEvent = new HashMap<String, List<EventBean>>();//
-    private Set<Integer> doubtfulEventsId = new HashSet<Integer>();//ç–‘ä¼¼çš„ID
-    //ä¸€ä¸ªè½¦ç«™10åˆ†ç§å†… æŠ¥è­¦ è¶…è¿‡5æ¬¡ åˆ¤å®šä¸º ç–‘ä¼¼æ£€ä¿®
-    private static Long LIMIT_ERROR_TIME = 1000 * 60 * 10L;//æœ€å°æŠ¥è­¦é—´éš”
-    private static Integer LIMIT_ERROR_NUM = 5;//æœ€å°æŠ¥è­¦æ•°
+    private Set<Integer> doubtfulEventsId = new HashSet<Integer>();//ÒÉËÆµÄID
+    //Ò»¸ö³µÕ¾10·ÖÖÖÄÚ ±¨¾¯ ³¬¹ı5´Î ÅĞ¶¨Îª ÒÉËÆ¼ìĞŞ
+    private static Long LIMIT_ERROR_TIME = 1000 * 60 * 10L;//×îĞ¡±¨¾¯¼ä¸ô
+    private static Integer LIMIT_ERROR_NUM = 5;//×îĞ¡±¨¾¯Êı
 
-    private Integer limitFoucs = 0;//æŸç±»è®¾å¤‡æœ‰æ•ˆå‘Šè­¦è¶…è¿‡æ­¤å€¼å³ä¸º é‡ç‚¹å…³æ³¨å¯¹è±¡
-    private Integer limitDeviceFoucs = 4;//æŸç±»è®¾å¤‡æœ‰æ•ˆå‘Šè­¦è¶…è¿‡æ­¤å€¼å³ä¸º é‡ç‚¹å…³æ³¨å¯¹è±¡
+    private Integer limitFoucs = 0;//Ä³ÀàÉè±¸ÓĞĞ§¸æ¾¯³¬¹ı´ËÖµ¼´Îª ÖØµã¹Ø×¢¶ÔÏó
+    private Integer limitDeviceFoucs = 4;//Ä³ÀàÉè±¸ÓĞĞ§¸æ¾¯³¬¹ı´ËÖµ¼´Îª ÖØµã¹Ø×¢¶ÔÏó
 
     private Map<String, List<FixEventBean>> fixEvent;
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
+    private List<ExcelBean> excelData = new ArrayList<>();
+
     public List<List<EventBean>> getDoubtfulOverhulEvents() {
         return doubtfulOverhulEvents;
+    }
+
+    public List<ExcelBean> getExcelOut() {
+        return this.excelData;
     }
 
 
@@ -89,17 +95,17 @@ public class DataHandler {
 
         Template template = velocityEngine.getTemplate("security-data.vm", "UTF-8");
         VelocityContext context = new VelocityContext();
-        //æ„é€ å±•ç¤ºæ•°æ®
+        //¹¹ÔìÕ¹Ê¾Êı¾İ
         String fromDate = ExcelUtils.dateFormat.format(new Date(startTime)) + "--" + ExcelUtils.dateFormat.format(new Date(endTime));
 
-        context.put("datetime", ExcelUtils.dateTimeFormat.format(new Date()));//å¤´éƒ¨æ—¶é—´
-        context.put("fromDate", fromDate);//æ•°æ®æ—¶é—´èŒƒå›´
-        context.put("eventCount", eventCount);//æ—¥å¿—æ€»æ•°
-        context.put("alarmCount", alarmCount);//æœ‰æ•ˆå‘Šè­¦æ•°
-        context.put("overhaulCount", overhaulEvents.size());//åˆå¤œæ£€ä¿®æ•°
-        context.put("doubtfulCount", doubtfulEventsId.size());//ç–‘ä¼¼æ£€ä¿®æ•°
-        context.put("doubtfulThreshold", LIMIT_ERROR_NUM);//ç–‘ä¼¼æ£€ä¿®çš„é˜ˆå€¼
-        context.put("doubtfulTime", LIMIT_ERROR_TIME / 1000 / 60);//ç–‘ä¼¼æ£€ä¿®çš„æ—¶é—´é˜ˆå€¼
+        context.put("datetime", ExcelUtils.dateTimeFormat.format(new Date()));//Í·²¿Ê±¼ä
+        context.put("fromDate", fromDate);//Êı¾İÊ±¼ä·¶Î§
+        context.put("eventCount", eventCount);//ÈÕÖ¾×ÜÊı
+        context.put("alarmCount", alarmCount);//ÓĞĞ§¸æ¾¯Êı
+        context.put("overhaulCount", overhaulEvents.size());//ÎçÒ¹¼ìĞŞÊı
+        context.put("doubtfulCount", doubtfulEventsId.size());//ÒÉËÆ¼ìĞŞÊı
+        context.put("doubtfulThreshold", LIMIT_ERROR_NUM);//ÒÉËÆ¼ìĞŞµÄãĞÖµ
+        context.put("doubtfulTime", LIMIT_ERROR_TIME / 1000 / 60);//ÒÉËÆ¼ìĞŞµÄÊ±¼äãĞÖµ
         context.put("dateSum", dayCount);
         List<CountBean> stationAlarmList = new ArrayList<>();
         stationAlarm.forEach((x, y) -> {
@@ -110,13 +116,13 @@ public class DataHandler {
             Integer yInt = Integer.valueOf(y.getValue());
             return yInt - xInt;
         });
-        context.put("stationAlarmList", stationAlarmList);//å„ç«™ç‚¹å‘Šè­¦æ•°
-        //æ„é€ æŠ˜çº¿å›¾æ•°æ®
-        List<String> xAxis = new ArrayList<>();//ç›´çº¿å›¾Xè½´
-        List<String> y1 = new ArrayList<>();//å‘Šè­¦æ€»æ•°
-        List<String> y2 = new ArrayList<>();//æœ‰æ•ˆå‘Šè­¦
-        List<String> y3 = new ArrayList<>();//åˆå¤œæ£€ä¿®
-        List<String> y4 = new ArrayList<>();//ç–‘ä¼¼æ£€ä¿®
+        context.put("stationAlarmList", stationAlarmList);//¸÷Õ¾µã¸æ¾¯Êı
+        //¹¹ÔìÕÛÏßÍ¼Êı¾İ
+        List<String> xAxis = new ArrayList<>();//Ö±ÏßÍ¼XÖá
+        List<String> y1 = new ArrayList<>();//¸æ¾¯×ÜÊı
+        List<String> y2 = new ArrayList<>();//ÓĞĞ§¸æ¾¯
+        List<String> y3 = new ArrayList<>();//ÎçÒ¹¼ìĞŞ
+        List<String> y4 = new ArrayList<>();//ÒÉËÆ¼ìĞŞ
 
         lineMap.forEach((x, y) -> {
             xAxis.add(x);
@@ -126,14 +132,14 @@ public class DataHandler {
             y4.add(y[3] + "");
         });
 
-        Map<String, List<String>> lineData = new HashMap();//ç”¨äºç»˜åˆ¶æŠ˜çº¿å›¾
+        Map<String, List<String>> lineData = new HashMap();//ÓÃÓÚ»æÖÆÕÛÏßÍ¼
         lineData.put("xData", xAxis);
         lineData.put("all", y1);
         lineData.put("effective", y2);
         lineData.put("overhaul", y3);
         lineData.put("doubtful", y4);
         context.put("lineData", JSON.toJSON(lineData).toString());
-        //æ„é€ é¥¼å›¾æ•°æ®
+        //¹¹Ôì±ıÍ¼Êı¾İ
         JSONObject bingData = new JSONObject();
         JSONArray typeList = new JSONArray();
         Integer otherSize = 0;
@@ -158,7 +164,7 @@ public class DataHandler {
         bingData.put("typeList", typeList);
         context.put("bingData", bingData.toString());
 
-        //æ„é€ é›·è¾¾å›¾
+        //¹¹ÔìÀ×´ïÍ¼
         List<Map<String, Object>> typeKeyList = new ArrayList<>();
         List<Integer> typeValue = new ArrayList<>();
         List<Map.Entry<String, Integer>> listSort = new ArrayList<>(deviceTypeErrorNum.entrySet());
@@ -204,7 +210,7 @@ public class DataHandler {
         radarData.put("valueList", typeValue);
         context.put("radarData", radarData.toString());
 
-        //é«˜å±è®¾å¤‡
+        //¸ßÎ£Éè±¸
         List<OutputBean> effective = new ArrayList<>();
         deviceErrorNum.forEach((x, y) -> {
             if (y.size() >= limitFoucs) {
@@ -225,7 +231,7 @@ public class DataHandler {
         });
         context.put("effectiveList", effective);
 
-        //ç–‘ä¼¼æ£€ä¿®
+        //ÒÉËÆ¼ìĞŞ
         List<OutputBean> doubtfulData = new ArrayList<>();
         for (List<EventBean> events : doubtfulOverhulEvents) {
             OutputBean doubtful = new OutputBean();
@@ -267,7 +273,7 @@ public class DataHandler {
         }
         context.put("doubtfulList", doubtfulData);
 
-        //ç”Ÿå‘½çº¿
+        //ÉúÃüÏß
         context.put("evt_subwaySum", stationAlarmList.size());
         context.put("max_subway", stationAlarmList.get(0).getName());
         context.put("max_subwayCount", stationAlarmList.get(0).getValue());
@@ -286,7 +292,7 @@ public class DataHandler {
         context.put("max_deviceType", deviceTypeList.get(0).getKey());
         context.put("max_deviceConut", deviceTypeList.get(0).getValue() + 1);
 
-        //é«˜å±è®¾å¤‡ç»Ÿè®¡
+        //¸ßÎ£Éè±¸Í³¼Æ
         List<DeviceBean> gaoweiCount = new ArrayList<>();
         deviceErrorNum.forEach((x, y) -> {
             Integer count = y.size();
@@ -305,7 +311,7 @@ public class DataHandler {
         }
 
 
-        //æ–°è¡¨
+        //ĞÂ±í
         List<AnalysisBean> fistTable = new ArrayList<>();
         deviceErrorNum.forEach((x, y) -> {
             DeviceBean device = y.get(0).getDevice();
@@ -313,21 +319,47 @@ public class DataHandler {
             analysisBean.setSubway(device.getSubway());
             analysisBean.setType(device.getUserDefinedType());
             analysisBean.setDeviceName(device.getName());
-            // æ‘„å½•è®¾å¤‡ è¶…è¿‡é˜ˆå€¼
+            // ÉãÂ¼Éè±¸ ³¬¹ıãĞÖµ
             if (checkDeviceType(device.getName()) && y.size() >= limitFoucs) {
                 Float fenshu = ((float) y.size()) / limitFoucs;
-                analysisBean.setAnalysisInfo(String.format("å‘Šè­¦æ¬¡æ•°%d,è¶…å‡ºå‘Šè­¦é˜ˆå€¼%d", y.size(), (Math.round(fenshu * 100))) + "%");
-                analysisBean.setHandlerInfo("æ’æŸ¥è¯¥æ‘„åƒæœºå„ä¸ªèŠ‚ç‚¹æ˜¯å¦å­˜åœ¨æ¥å¤´æ¥è§¦ä¸è‰¯/æŸåç­‰ç°è±¡");
+                analysisBean.setAnalysisInfo(String.format("¸æ¾¯´ÎÊı%d,³¬³ö¸æ¾¯ãĞÖµ%d", y.size(), (Math.round(fenshu * 100))) + "%");
+                analysisBean.setHandlerInfo("ÅÅ²é¸ÃÉãÏñ»ú¸÷¸ö½ÚµãÊÇ·ñ´æÔÚ½ÓÍ·½Ó´¥²»Á¼/Ëğ»µµÈÏÖÏó");
                 fistTable.add(analysisBean);
+
+                ExcelBean excel = new ExcelBean();
+                excel.setSubway(analysisBean.getSubway());
+                excel.setDeviceName(device.getName());
+                excel.setAlarmCount(y.size()+"");
+                for (EventBean e : y){
+                    if (excel.getLastTime() == null || excel.getLastTime()<e.getTimeStamp()){
+                        excel.setLastTime(e.getTimeStamp());
+                    }
+                    excel.getAlarmInfo().add(e.getAlarm().getInfo());
+                }
+                excelData.add(excel);
             }
-            // è§†é¢‘ä¼ è¾“è®¾å¤‡
+            // ÊÓÆµ´«ÊäÉè±¸
             if (!checkDeviceType(device.getName())) {
-                analysisBean.setAnalysisInfo("è®¾å¤‡å‘Šè­¦,æ¬¡æ•°" + y.size());
-                analysisBean.setHandlerInfo("å…³æ³¨è®¾å¤‡æ¥ç”µ/å·¥ä½œçŠ¶æ€");
+                analysisBean.setAnalysisInfo("Éè±¸¸æ¾¯,´ÎÊı" + y.size());
+                analysisBean.setHandlerInfo("¹Ø×¢Éè±¸½Óµç/¹¤×÷×´Ì¬");
                 fistTable.add(analysisBean);
+
+                ExcelBean excel = new ExcelBean();
+                excel.setSubway(analysisBean.getSubway());
+                excel.setDeviceName(device.getName());
+                excel.setAlarmCount(y.size()+"");
+                for (EventBean e : y){
+                    if (excel.getLastTime() == null || excel.getLastTime()<e.getTimeStamp()){
+                        excel.setLastTime(e.getTimeStamp());
+                    }
+                    excel.getAlarmInfo().add(e.getAlarm().getInfo());
+                }
+                excelData.add(excel);
             }
+
+
         });
-        // ç–‘ä¼¼æ•°æ®æ·»åŠ æ–°è¡¨
+        // ÒÉËÆÊı¾İÌí¼ÓĞÂ±í
         doubtfulOverhulEvents.forEach((x) -> {
             List<AnalysisBean> get = getAnalysis(x);
             fistTable.addAll(get);
@@ -372,7 +404,7 @@ public class DataHandler {
                     continue;
                 }
                 if (tmpName == null) {
-                    fusionName.append(eventBean.getDevice().getName()).append(" ");
+                    fusionName.append(eventBean.getDevice().getName()).append("; ");
                     tmpName = eventBean.getTmpName();
                     tmpList.add(eventBean);
                     flag++;
@@ -380,7 +412,7 @@ public class DataHandler {
                 }
                 Integer aa = tmpName - eventBean.getTmpName();
                 if (aa == 1 || aa == -1) {
-                    fusionName.append(eventBean.getDevice().getName()).append(" ");
+                    fusionName.append(eventBean.getDevice().getName()).append("; ");
                     tmpName = eventBean.getTmpName();
                     tmpList.add(eventBean);
                     flag++;
@@ -391,10 +423,19 @@ public class DataHandler {
                         AnalysisBean analysisBean = new AnalysisBean();
                         analysisBean.setSubway(device.getSubway());
                         analysisBean.setType(device.getUserDefinedType());
-                        analysisBean.setAnalysisInfo("è®¾å¤‡ï¼š" + fusionName.toString() + timeFormat.format(new Date(eventBean.getTimeStamp())) + "åŒæ—¶å‘Šè­¦");
-                        analysisBean.setHandlerInfo("å»ºè®®æ£€æŸ¥ä¸Šæ¸¸è®¾å¤‡ï¼Œæ’æŸ¥éš”ç¦»åœ°å•å…ƒ/å­—ç¬¦ä¸²å åŠ åˆ†é…å™¨è®¾å¤‡æ¥ç”µ/å·¥ä½œçŠ¶æ€");
+                        analysisBean.setAnalysisInfo("Éè±¸£º" + fusionName.substring(0,fusionName.length()-1) + timeFormat.format(new Date(eventBean.getTimeStamp())) + "Í¬Ê±¸æ¾¯");
+                        analysisBean.setHandlerInfo("½¨Òé¼ì²éÉÏÓÎÉè±¸£¬ÅÅ²é¸ôÀëµØµ¥Ôª/×Ö·û´®µş¼Ó·ÖÅäÆ÷Éè±¸½Óµç/¹¤×÷×´Ì¬");
                         analysisBean.setDeviceName(" ");
                         ret.add(analysisBean);
+
+
+                        ExcelBean excel = new ExcelBean();
+                        excel.setSubway(device.getSubway());
+                        excel.setDeviceName("´«ÊäÉè±¸");
+                        excel.getAlarmInfo().add("Éè±¸£º" + fusionName.toString() + timeFormat.format(new Date(eventBean.getTimeStamp())) + "Í¬Ê±¸æ¾¯");
+                        excel.setAlarmCount(flag+"");
+                        excel.setLastTime(eventBean.getTimeStamp());
+                        this.excelData.add(excel);
                     }
                     flag = 1;
                     tmpName = eventBean.getTmpName();
@@ -409,10 +450,18 @@ public class DataHandler {
                 AnalysisBean analysisBean = new AnalysisBean();
                 analysisBean.setSubway(device.getSubway());
                 analysisBean.setType(device.getUserDefinedType());
-                analysisBean.setAnalysisInfo("è®¾å¤‡ï¼š" + fusionName.toString() + timeFormat.format(new Date(list.get(0).getTimeStamp())) + "åŒæ—¶å‘Šè­¦");
-                analysisBean.setHandlerInfo("å»ºè®®æ£€æŸ¥ä¸Šæ¸¸è®¾å¤‡ï¼Œæ’æŸ¥éš”ç¦»åœ°å•å…ƒ/å­—ç¬¦ä¸²å åŠ åˆ†é…å™¨è®¾å¤‡æ¥ç”µ/å·¥ä½œçŠ¶æ€");
+                analysisBean.setAnalysisInfo("Éè±¸£º" + fusionName.toString() + timeFormat.format(new Date(list.get(0).getTimeStamp())) + "Í¬Ê±¸æ¾¯");
+                analysisBean.setHandlerInfo("½¨Òé¼ì²éÉÏÓÎÉè±¸£¬ÅÅ²é¸ôÀëµØµ¥Ôª/×Ö·û´®µş¼Ó·ÖÅäÆ÷Éè±¸½Óµç/¹¤×÷×´Ì¬");
                 analysisBean.setDeviceName(" ");
                 ret.add(analysisBean);
+
+                ExcelBean excel = new ExcelBean();
+                excel.setSubway(device.getSubway());
+                excel.setDeviceName("´«ÊäÉè±¸");
+                excel.getAlarmInfo().add("Éè±¸£º" + fusionName.toString() + timeFormat.format(new Date(list.get(0).getTimeStamp())) + "Í¬Ê±¸æ¾¯");
+                excel.setAlarmCount(flag+"");
+                excel.setLastTime(list.get(0).getTimeStamp());
+                this.excelData.add(excel);
             }
         }
 
@@ -433,18 +482,18 @@ public class DataHandler {
     }
 
     public void print() {
-        System.out.println("æ•°æ®å¼€å§‹æ—¶é—´ï¼š" + ExcelUtils.dateTimeFormat.format(new Date(startTime)));
-        System.out.println("æ•°æ®ç»“æŸæ—¶é—´ï¼š" + ExcelUtils.dateTimeFormat.format(new Date(endTime)));
-        System.out.println("æ•°æ®è·¨åº¦ï¼š" + dayCount + "å¤©");
-        System.out.println("ç–‘ä¼¼æ£€ä¿®æ¬¡æ•°ï¼š" + doubtfulEventsId.size());
-        System.out.println("æœ‰æ•ˆæŠ¥è­¦æ•°" + alarmCount);
+        System.out.println("Êı¾İ¿ªÊ¼Ê±¼ä£º" + ExcelUtils.dateTimeFormat.format(new Date(startTime)));
+        System.out.println("Êı¾İ½áÊøÊ±¼ä£º" + ExcelUtils.dateTimeFormat.format(new Date(endTime)));
+        System.out.println("Êı¾İ¿ç¶È£º" + dayCount + "Ìì");
+        System.out.println("ÒÉËÆ¼ìĞŞ´ÎÊı£º" + doubtfulEventsId.size());
+        System.out.println("ÓĞĞ§±¨¾¯Êı" + alarmCount);
 
-        System.out.println("åˆå¤œæ£€ä¿®å‘Šè­¦ï¼š" + overhaulEvents.size());
-        System.out.println("---æœ‰æ•ˆæŠ¥è­¦æ•°---");
+        System.out.println("ÎçÒ¹¼ìĞŞ¸æ¾¯£º" + overhaulEvents.size());
+        System.out.println("---ÓĞĞ§±¨¾¯Êı---");
         for (Map.Entry<String, List<EventBean>> entry : deviceErrorNum.entrySet()) {
             System.out.println(deviceMapping.get(entry.getKey()).getSubway() + "  " + deviceMapping.get(entry.getKey()).getName() + "  " + entry.getValue().size());
         }
-        System.out.println("â€”â€”â€”â€”ç–‘ä¼¼æ£€ä¿®æ•°æ®â€”â€”â€”â€”");
+        System.out.println("¡ª¡ª¡ª¡ªÒÉËÆ¼ìĞŞÊı¾İ¡ª¡ª¡ª¡ª");
         for (List<EventBean> eventBeans : doubtfulOverhulEvents) {
 
             for (EventBean e : eventBeans) {
@@ -457,7 +506,7 @@ public class DataHandler {
             }
             System.out.println("---------");
         }
-        System.out.println("â€”â€”â€”â€”ä½œä¸šäº§ç”Ÿå‘Šè­¦æ•°æ®â€”â€”â€”â€”");
+        System.out.println("¡ª¡ª¡ª¡ª×÷Òµ²úÉú¸æ¾¯Êı¾İ¡ª¡ª¡ª¡ª");
         for (EventBean e : overhaulEvents) {
 
             System.out.print(ExcelUtils.dateTimeFormat.format(new Date(e.getTimeStamp())) + " ");
@@ -472,7 +521,7 @@ public class DataHandler {
     }
 
     public void handle() {
-        //è®¡ç®—èµ·æ­¢æ—¶é—´
+        //¼ÆËãÆğÖ¹Ê±¼ä
         EventBean startEventBean = events.get(0);
         EventBean endEventBean = events.get(events.size() - 1);
         startTime = startEventBean.getTimeStamp();
@@ -480,26 +529,26 @@ public class DataHandler {
         initLineData(startTime, endTime);
         Long dayStamp = (endTime - startTime) / (1000 * 60 * 60 * 24L);
         eventCount = events.size();
-        dayCount = dayStamp.intValue() + 1;//å¤©æ•°
+        dayCount = dayStamp.intValue() + 1;//ÌìÊı
         if (dayCount >= 30) {
             limitFoucs = 5;
-            System.out.println("é˜ˆå€¼ï¼š" + 5);
+            System.out.println("ãĞÖµ£º" + 5);
         } else {
             limitFoucs = 3;
-            System.out.println("é˜ˆå€¼ï¼š" + 3);
+            System.out.println("ãĞÖµ£º" + 3);
         }
         Iterator<EventBean> it = events.iterator();
-        //ç¬¬ä¸€æ¬¡å…ˆæŠŠç–‘ä¼¼æ£€ä¿®å’Œç¡®è®¤çš„æ£€ä¿®å‰”é™¤ï¼Œç”Ÿæˆ è®¾å¤‡åŸºæœ¬ä¿¡æ¯
+        //µÚÒ»´ÎÏÈ°ÑÒÉËÆ¼ìĞŞºÍÈ·ÈÏµÄ¼ìĞŞÌŞ³ı£¬Éú³É Éè±¸»ù±¾ĞÅÏ¢
         while (it.hasNext()) {
             EventBean event = it.next();
             calendar.setTimeInMillis(event.getTimeStamp());
             String key = getDateKey(calendar);
-            //æŠ˜çº¿å›¾ æ€»é«˜å‘Šè­¦æ•°ç´¯åŠ 1
+            //ÕÛÏßÍ¼ ×Ü¸ß¸æ¾¯ÊıÀÛ¼Ó1
             lineMap.get(key)[0] = lineMap.get(key)[0] + 1;
 
-            //éªŒè¯æ­¤æ¡å‘Šè­¦æ˜¯å¦æ˜¯ åˆå¤œæ£€ä¿®
+            //ÑéÖ¤´ËÌõ¸æ¾¯ÊÇ·ñÊÇ ÎçÒ¹¼ìĞŞ
             if (checkDeviceOverhaul(event)) {
-                //æŠ˜çº¿å›¾ åˆå¤œæ£€ä¿®ç´¯åŠ 1
+                //ÕÛÏßÍ¼ ÎçÒ¹¼ìĞŞÀÛ¼Ó1
                 lineMap.get(key)[2] = lineMap.get(key)[2] + 1;
                 it.remove();
                 continue;
@@ -512,7 +561,7 @@ public class DataHandler {
 
         }
 
-        //å†æ¬¡æ£€æŸ¥æ˜¯å¦æœ‰ç–‘ä¼¼æ£€ä¿®
+        //ÔÙ´Î¼ì²éÊÇ·ñÓĞÒÉËÆ¼ìĞŞ
         for (Map.Entry<String, List<EventBean>> errorEntry : subwayErrorEvent.entrySet()) {
             if (errorEntry.getValue().size() > LIMIT_ERROR_NUM) {
                 for (EventBean bean : errorEntry.getValue()) {
@@ -522,30 +571,30 @@ public class DataHandler {
             }
         }
 
-        //å¤„ç†å¯ç¡®ä¿¡çš„æŠ¥å‘Š
+        //´¦Àí¿ÉÈ·ĞÅµÄ±¨¸æ
         for (EventBean event : events) {
             calendar.setTimeInMillis(event.getTimeStamp());
             String key = getDateKey(calendar);
-            //è®¾å¤‡ç±»å‹
+            //Éè±¸ÀàĞÍ
             if (checkDeviceType(event.getDevice().getName())) {
-                event.getDevice().setUserDefinedType("è§†é¢‘æ‘„å½•è®¾å¤‡");
+                event.getDevice().setUserDefinedType("ÊÓÆµÉãÂ¼Éè±¸");
             } else {
-                event.getDevice().setUserDefinedType("è§†é¢‘ä¼ è¾“è®¾å¤‡");
+                event.getDevice().setUserDefinedType("ÊÓÆµ´«ÊäÉè±¸");
             }
-            if (!doubtfulEventsId.contains(event.getId())) {//éç–‘ä¼¼æŠ¥è­¦
+            if (!doubtfulEventsId.contains(event.getId())) {//·ÇÒÉËÆ±¨¾¯
                 lineMap.get(key)[1] = lineMap.get(key)[1] + 1;
 
-                //å„ç«™æŠ¥è­¦æ•°
+                //¸÷Õ¾±¨¾¯Êı
                 if (stationAlarm.containsKey(event.getDevice().getSubway())) {
                     stationAlarm.put(event.getDevice().getSubway(), stationAlarm.get(event.getDevice().getSubway()) + 1);
                 } else {
                     stationAlarm.put(event.getDevice().getSubway(), 1);
                 }
 
-                //å„è®¾å¤‡ç±»å‹å¤šå°‘æ¬¡
+                //¸÷Éè±¸ÀàĞÍ¶àÉÙ´Î
                 String typeName = event.getDevice().getTypeName();
                 if (StringUtils.isEmpty(typeName)) {
-                    typeName = "æœªçŸ¥";
+                    typeName = "Î´Öª";
                 }
                 if (deviceTypeErrorNum.containsKey(typeName)) {
                     deviceTypeErrorNum.put(typeName, deviceTypeErrorNum.get(typeName) + 1);
@@ -553,7 +602,7 @@ public class DataHandler {
                     deviceTypeErrorNum.put(typeName, 1);
                 }
 
-                //å„ä¸ªè®¾å¤‡æœ‰å¤šå°‘æ¬¡
+                //¸÷¸öÉè±¸ÓĞ¶àÉÙ´Î
                 if (deviceErrorNum.containsKey(event.getDevice().getId())) {
                     deviceErrorNum.get(event.getDevice().getId()).add(event);
                 } else {
@@ -561,17 +610,17 @@ public class DataHandler {
                     alarms.add(event);
                     deviceErrorNum.put(event.getDevice().getId(), alarms);
                 }
-                //å‘Šè­¦ç±»å‹åˆ†æ
+                //¸æ¾¯ÀàĞÍ·ÖÎö
                 if (alarm.containsKey(event.getAlarm().getLevel())) {
                     alarm.put(event.getAlarm().getLevel(), alarm.get(event.getAlarm().getLevel()) + 1);
                 } else {
                     alarm.put(event.getAlarm().getLevel(), 1);
                 }
 
-                //æœ‰æ•ˆå‘Šè­¦çš„æ€»æ•°
+                //ÓĞĞ§¸æ¾¯µÄ×ÜÊı
                 this.alarmCount++;
             } else {
-                //æŠ˜çº¿å›¾ ç–‘ä¼¼å‘Šè­¦+1
+                //ÕÛÏßÍ¼ ÒÉËÆ¸æ¾¯+1
                 lineMap.get(key)[3] = lineMap.get(key)[3] + 1;
             }
         }
@@ -588,13 +637,13 @@ public class DataHandler {
     private void checkDoubtfulOverhul(EventBean eventBean) {
         if (StringUtils.isNotEmpty(eventBean.getDevice().getSubway())) {
             String subway = eventBean.getDevice().getSubway();
-            if (subwayErrorTime.containsKey(subway)) {//è¯¥ç«™å‡ºç°è¿‡æŠ¥è­¦
+            if (subwayErrorTime.containsKey(subway)) {//¸ÃÕ¾³öÏÖ¹ı±¨¾¯
                 Long oldTime = subwayErrorTime.get(subway);
-                if (eventBean.getTimeStamp() - oldTime < LIMIT_ERROR_TIME) {//å°äº5åˆ†é’Ÿ
+                if (eventBean.getTimeStamp() - oldTime < LIMIT_ERROR_TIME) {//Ğ¡ÓÚ5·ÖÖÓ
                     subwayErrorEvent.get(subway).add(eventBean);
                     subwayErrorTime.put(subway, eventBean.getTimeStamp());
-                } else {//è¶…è¿‡5åˆ†é’Ÿï¼Œåˆ¤æ–­ä¸Šä¸€æ¬¡
-                    if (subwayErrorEvent.get(subway).size() >= LIMIT_ERROR_NUM) {//æ˜¯ç–‘ä¼¼æ£€ä¿®
+                } else {//³¬¹ı5·ÖÖÓ£¬ÅĞ¶ÏÉÏÒ»´Î
+                    if (subwayErrorEvent.get(subway).size() >= LIMIT_ERROR_NUM) {//ÊÇÒÉËÆ¼ìĞŞ
                         for (EventBean bean : subwayErrorEvent.get(subway)) {
                             doubtfulEventsId.add(bean.getId());
                         }
@@ -607,7 +656,7 @@ public class DataHandler {
                     subwayErrorEvent.put(subway, newEventBean);
                     subwayErrorTime.put(subway, eventBean.getTimeStamp());
                 }
-            } else {//è¯¥ç«™æœªå‡ºç°è¿‡æŠ¥è­¦
+            } else {//¸ÃÕ¾Î´³öÏÖ¹ı±¨¾¯
                 List<EventBean> newEventBean = new ArrayList<EventBean>();
                 newEventBean.add(eventBean);
                 subwayErrorEvent.put(subway, newEventBean);
@@ -634,7 +683,7 @@ public class DataHandler {
     }
 
 
-    //0-4 23ä»¥å è®¾å¤‡æ£€ä¿® åˆ¤å®šä¸º åˆå¤œæ£€ä¿®
+    //0-4 23ÒÔºó Éè±¸¼ìĞŞ ÅĞ¶¨Îª ÎçÒ¹¼ìĞŞ
     /*private Boolean checkDeviceOverhaul(EventBean eventBean) {
 
         int hour = calendar.get(Calendar.HOUR_OF_DAY);

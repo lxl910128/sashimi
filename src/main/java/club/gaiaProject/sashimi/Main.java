@@ -21,13 +21,13 @@ public class Main {
         File outExcel = new File("C:\\Users\\Administrator\\Desktop\\3.xls");
 
         Map<String, List<FixEventBean>> fixEvent = ExcelUtils.getFixEvent(fixData);
-        MyLogger.info("é¢„è®¡æ£€ä¿®è®°å½•å…±æœ‰ï¼š" + fixEvent.size());
+        MyLogger.info("Ô¤¼Æ¼ìÐÞ¼ÇÂ¼¹²ÓÐ£º" + fixEvent.size());
         List<EventBean> result = ExcelUtils.getDate(data, true);
-        System.out.println("æ€»è®°å½•æ•°" + result.size());
+        System.out.println("×Ü¼ÇÂ¼Êý" + result.size());
         DataHandler handler = new DataHandler(result, fixEvent);
         handler.handle();
         handler.createHTML(out);
-        ExcelUtils.writeExcel(outExcel,handler.getDoubtfulOverhulEvents());
+        ExcelUtils.writeExcel2(outExcel,handler.getExcelOut());
     }
 
 

@@ -1,6 +1,6 @@
 package club.gaiaProject.sashimi.util;
 
-import club.gaiaProject.sashimi.bean.FixEventBean;
+import club.gaiaProject.sashimi.bean.*;
 import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFCell;
@@ -15,10 +15,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import club.gaiaProject.sashimi.bean.AlarmBean;
-import club.gaiaProject.sashimi.bean.DeviceBean;
-import club.gaiaProject.sashimi.bean.EventBean;
-
 /**
  * Created by luoxiaolong on 18-4-28.
  */
@@ -29,18 +25,19 @@ public class ExcelUtils {
     private static final String EXCEL_XLS = "xls";
     private static final String EXCEL_XLSX = "xlsx";
 
-    private static String[] titles = {"å‘Šè­¦ç­‰çº§", "å‘Šè­¦ç±»åˆ«", "è®¾å¤‡åç§°", "è®¾å¤‡å‹å·", "è®¾å¤‡ç¼–å·", "è®¾å¤‡IP", "è®¾å¤‡ç±»å‹", "å‘Šè­¦åŒºåŸŸ", "è®¾å¤‡åœ°å€", "å‘Šè­¦ä¿¡æ¯", "å‘Šè­¦åŸå› ", "å‘Šè­¦æ—¶é—´", "å‘Šè­¦ç¡®è®¤äºº", "å‘Šè­¦ç¡®è®¤è¯´æ˜", "å‘Šè­¦ç¡®è®¤æ—¶é—´"};
+    private static String[] titles = {"¸æ¾¯µÈ¼¶", "¸æ¾¯Àà±ğ", "Éè±¸Ãû³Æ", "Éè±¸ĞÍºÅ", "Éè±¸±àºÅ", "Éè±¸IP", "Éè±¸ÀàĞÍ", "¸æ¾¯ÇøÓò", "Éè±¸µØÖ·", "¸æ¾¯ĞÅÏ¢", "¸æ¾¯Ô­Òò", "¸æ¾¯Ê±¼ä", "¸æ¾¯È·ÈÏÈË", "¸æ¾¯È·ÈÏËµÃ÷", "¸æ¾¯È·ÈÏÊ±¼ä"};
+    private static String[] titles1 = {"¸æ¾¯ÇøÓò", "Éè±¸Ãû³Æ", "¸æ¾¯ĞÅÏ¢", "¸æ¾¯´ÎÊı", "Ä©´Î¸æ¾¯Ê±¼ä", "´¦Àí½á¹û"};
 
     public static Workbook getWB(File excel) throws IOException {
         Workbook wb = null;
         FileInputStream in = new FileInputStream(excel);
-        // å…³è”execl
+        // ¹ØÁªexecl
         if (excel.getName().endsWith(EXCEL_XLS)) {     //Excel&nbsp;2003
             wb = new HSSFWorkbook(in);
         } else if (excel.getName().endsWith(EXCEL_XLSX)) {    // Excel 2007/2010
             wb = new XSSFWorkbook(in);
         } else {
-            System.out.println("æ–‡ä»¶æ ¼å¼é”™è¯¯ï¼");
+            System.out.println("ÎÄ¼ş¸ñÊ½´íÎó£¡");
             System.exit(-1);
         }
         return wb;
@@ -50,21 +47,21 @@ public class ExcelUtils {
         Map<String, CellStyle> styles = new HashMap();
         DataFormat dataFormat = wb.createDataFormat();
 
-        // æ ‡é¢˜æ ·å¼
+        // ±êÌâÑùÊ½
         CellStyle titleStyle = wb.createCellStyle();
-        titleStyle.setAlignment(CellStyle.ALIGN_CENTER); // æ°´å¹³å¯¹é½
-        titleStyle.setVerticalAlignment(CellStyle.ALIGN_CENTER); // å‚ç›´å¯¹é½
+        titleStyle.setAlignment(CellStyle.ALIGN_CENTER); // Ë®Æ½¶ÔÆë
+        titleStyle.setVerticalAlignment(CellStyle.ALIGN_CENTER); // ´¹Ö±¶ÔÆë
         titleStyle.setLocked(true);
         titleStyle.setFillForegroundColor(IndexedColors.BLUE.getIndex());
         titleStyle.setFillBackgroundColor(IndexedColors.YELLOW.getIndex());
         Font titleFont = wb.createFont();
         titleFont.setFontHeightInPoints((short) 16);
         titleFont.setBold(true);
-        titleFont.setFontName("å¾®è½¯é›…é»‘");
+        titleFont.setFontName("Î¢ÈíÑÅºÚ");
         titleStyle.setFont(titleFont);
         styles.put("title", titleStyle);
 
-        // æ–‡ä»¶å¤´æ ·å¼
+        // ÎÄ¼şÍ·ÑùÊ½
         CellStyle headerStyle = wb.createCellStyle();
         headerStyle.setAlignment(CellStyle.ALIGN_CENTER);
         headerStyle.setVerticalAlignment(CellStyle.ALIGN_CENTER);
@@ -75,11 +72,11 @@ public class ExcelUtils {
         Font headerFont = wb.createFont();
         headerFont.setFontHeightInPoints((short) 12);
         headerFont.setColor(IndexedColors.WHITE.getIndex());
-        titleFont.setFontName("å¾®è½¯é›…é»‘");
+        titleFont.setFontName("Î¢ÈíÑÅºÚ");
         headerStyle.setFont(headerFont);
         styles.put("header", headerStyle);
 
-        // æ­£æ–‡æ ·å¼
+        // ÕıÎÄÑùÊ½
         CellStyle cellStyle = wb.createCellStyle();
         cellStyle.setAlignment(CellStyle.ALIGN_CENTER);
         cellStyle.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
@@ -97,6 +94,81 @@ public class ExcelUtils {
         return styles;
     }
 
+    public static void writeExcel2(File file, List<ExcelBean> list) throws IOException {
+        Workbook wb = null;
+        if (file.getName().contains(EXCEL_XLS)) {
+            wb = new HSSFWorkbook();
+        } else {
+            wb = new XSSFWorkbook();
+        }
+
+        Sheet sheet = wb.createSheet();
+        sheet.setDefaultColumnWidth(30);
+        Map<String, CellStyle> styles = createStyles(wb);
+        /*
+         * ´´½¨±êÌâĞĞ
+         */
+        Row row = sheet.createRow(0);
+        for (int i = 0; i < titles1.length; i++) {
+            Cell cell = row.createCell(i);
+            cell.setCellStyle(styles.get("header"));
+            cell.setCellValue(titles1[i]);
+        }
+
+        int index = 1;
+        for (ExcelBean event : list) {
+            Row newRow = sheet.createRow(index);
+            for (int i = 0; i < 6; i++) {
+                Cell newCell = newRow.createCell(i);
+                newCell.setCellStyle(styles.get("cell"));
+                switch (i) {
+                    case 0:
+                        newCell.setCellValue(event.getSubway());
+                        break;
+                    case 1:
+                        newCell.setCellValue(event.getDeviceName());
+                        break;
+                    case 2:
+                        StringBuffer buffer = new StringBuffer();
+                        for (String s : event.getAlarmInfo()) {
+                            buffer.append(s).append(";");
+                        }
+                        newCell.setCellValue(buffer.substring(0, buffer.length() - 1));
+                        break;
+                    case 3:
+                        newCell.setCellValue(event.getAlarmCount());
+                        break;
+                    case 4:
+                        newCell.setCellValue(ExcelUtils.dateTimeFormat.format(new Date(event.getLastTime())));
+                        break;
+                    default:
+                        newCell.setCellValue(" ");
+
+                }
+            }
+            index++;
+        }
+
+        // Èç¹ûÎÄ¼ş´æÔÚ,ÔòÉ¾³ıÒÑÓĞµÄÎÄ¼ş,ÖØĞÂ´´½¨Ò»·İĞÂµÄ
+        file.createNewFile();
+        OutputStream outputStream = null;
+        try {
+            outputStream = new FileOutputStream(file);
+            wb.write(outputStream);
+        } catch (IOException e) {
+            MyLogger.error(e.getMessage());
+        } finally {
+            try {
+                if (null != outputStream) {
+                    outputStream.close();
+                }
+            } catch (IOException e) {
+                MyLogger.error(e.getMessage());
+            }
+        }
+
+    }
+
     public static void writeExcel(File file, List<List<EventBean>> list) throws IOException {
         Workbook wb = null;
         if (file.getName().contains(EXCEL_XLS)) {
@@ -110,7 +182,7 @@ public class ExcelUtils {
         sheet.setDefaultColumnWidth(15);
         Map<String, CellStyle> styles = createStyles(wb);
         /*
-         * åˆ›å»ºæ ‡é¢˜è¡Œ
+         * ´´½¨±êÌâĞĞ
          */
         Row row = sheet.createRow(0);
         for (int i = 0; i < titles.length; i++) {
@@ -138,7 +210,7 @@ public class ExcelUtils {
                 index++;
             }
         }
-        // å¦‚æœæ–‡ä»¶å­˜åœ¨,åˆ™åˆ é™¤å·²æœ‰çš„æ–‡ä»¶,é‡æ–°åˆ›å»ºä¸€ä»½æ–°çš„
+        // Èç¹ûÎÄ¼ş´æÔÚ,ÔòÉ¾³ıÒÑÓĞµÄÎÄ¼ş,ÖØĞÂ´´½¨Ò»·İĞÂµÄ
         file.createNewFile();
         OutputStream outputStream = null;
         try {
@@ -172,7 +244,7 @@ public class ExcelUtils {
                 rowIterator.next();
                 continue;
             }
-            //å–è¡Œ
+            //È¡ĞĞ
             Row row = rowIterator.next();
             if (row == null) {
                 continue;
@@ -220,7 +292,7 @@ public class ExcelUtils {
                         ret.put(fixEvent.getSubway(), listFix);
                     }
                 } else {
-                    MyLogger.info(String.format("ç¬¬%dæ¡æ£€ä¿®è®°å½•çš„å¼€å§‹æ—¶é—´å¤§äºç»“æŸæ—¶é—´ï¼Œèˆå¼ƒ", rowIndex));
+                    MyLogger.info(String.format("µÚ%dÌõ¼ìĞŞ¼ÇÂ¼µÄ¿ªÊ¼Ê±¼ä´óÓÚ½áÊøÊ±¼ä£¬ÉáÆú", rowIndex));
                 }
             }
             rowIndex++;
@@ -233,17 +305,17 @@ public class ExcelUtils {
     }
 
     /**
-     * è·å–excel
+     * »ñÈ¡excel
      */
     public static List<EventBean> getDate(File excel, Integer cellNum, Boolean hasHead) throws IOException {
         Workbook wb = getWB(excel);
         List<EventBean> ret = new ArrayList<EventBean>();
-        //éå† sheet
+        //±éÀú sheet
         for (int sheetIndex = 0; sheetIndex < wb.getNumberOfSheets(); sheetIndex++) {
-            //å–sheet
+            //È¡sheet
             Sheet st = wb.getSheetAt(sheetIndex);
             Iterator<Row> rowIterator = st.rowIterator();
-            //éå†è¡Œ
+            //±éÀúĞĞ
             int rowIndex = 0;
             while (rowIterator.hasNext()) {
                 if (rowIndex == 0 && hasHead) {
@@ -251,7 +323,7 @@ public class ExcelUtils {
                     rowIterator.next();
                     continue;
                 }
-                //å–è¡Œ
+                //È¡ĞĞ
                 Row row = rowIterator.next();
                 if (row == null) {
                     continue;
@@ -267,7 +339,7 @@ public class ExcelUtils {
                         switch (columnIndex) {
                             case 0:
                                 String level = (String) getCellValue(cell, false);
-                                //å¦‚æœç¬¬ä¸€åˆ—ä¸ºç©ºæ€ä»£è¡¨è¿™è¡Œæ²¡æ•°æ®
+                                //Èç¹ûµÚÒ»ÁĞÎª¿ÕÔõ´ú±íÕâĞĞÃ»Êı¾İ
                                 if (level == null) {
 
                                     nullRowFlag = true;
@@ -320,7 +392,7 @@ public class ExcelUtils {
                     }
                 }
                 if (nullRowFlag) {
-                    MyLogger.info(String.format("ç¬¬%dæ— é¦–åˆ—ï¼Œåˆ¤å®šä¸ºç©ºè¡Œå¹¶èˆå¼ƒ", rowIndex + 1));
+                    MyLogger.info(String.format("µÚ%dÎŞÊ×ÁĞ£¬ÅĞ¶¨Îª¿ÕĞĞ²¢ÉáÆú", rowIndex + 1));
                 } else {
                     rowInfo.setAlarm(alarm);
                     rowInfo.setDevice(device);
@@ -347,7 +419,7 @@ public class ExcelUtils {
                         try {
                             value = dateTimeFormat.parse(str).getTime();
                         } catch (ParseException e) {
-                            System.out.println("æ—¥æœŸè½¬æ¢å¤±è´¥");
+                            System.out.println("ÈÕÆÚ×ª»»Ê§°Ü");
                             value = null;
                         }
                     }
@@ -366,7 +438,7 @@ public class ExcelUtils {
                 }
                 break;
             case HSSFCell.CELL_TYPE_FORMULA:
-                // å¯¼å…¥æ—¶å¦‚æœä¸ºå…¬å¼ç”Ÿæˆçš„æ•°æ®åˆ™æ— å€¼
+                // µ¼ÈëÊ±Èç¹ûÎª¹«Ê½Éú³ÉµÄÊı¾İÔòÎŞÖµ
                 if (!cell.getStringCellValue().equals("")) {
                     value = cell.getStringCellValue();
                 } else {
