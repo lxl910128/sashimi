@@ -422,7 +422,7 @@ public class DataHandler {
                         DeviceBean device = eventBean.getDevice();
                         AnalysisBean analysisBean = new AnalysisBean();
                         analysisBean.setSubway(device.getSubway());
-                        analysisBean.setType(device.getUserDefinedType());
+                        analysisBean.setType("视频传输设备");
                         analysisBean.setAnalysisInfo("设备：" + fusionName.substring(0,fusionName.length()-1) + timeFormat.format(new Date(eventBean.getTimeStamp())) + "同时告警");
                         analysisBean.setHandlerInfo("建议检查上游设备，排查隔离地单元/字符串叠加分配器设备接电/工作状态");
                         analysisBean.setDeviceName(" ");
@@ -431,7 +431,7 @@ public class DataHandler {
 
                         ExcelBean excel = new ExcelBean();
                         excel.setSubway(device.getSubway());
-                        excel.setDeviceName("传输设备");
+                        excel.setDeviceName("视频传输设备");
                         excel.getAlarmInfo().add("设备：" + fusionName.toString() + timeFormat.format(new Date(eventBean.getTimeStamp())) + "同时告警");
                         excel.setAlarmCount(flag+"");
                         excel.setLastTime(eventBean.getTimeStamp());
@@ -449,7 +449,7 @@ public class DataHandler {
                 DeviceBean device = list.get(0).getDevice();
                 AnalysisBean analysisBean = new AnalysisBean();
                 analysisBean.setSubway(device.getSubway());
-                analysisBean.setType(device.getUserDefinedType());
+                analysisBean.setType("视频传输设备");
                 analysisBean.setAnalysisInfo("设备：" + fusionName.toString() + timeFormat.format(new Date(list.get(0).getTimeStamp())) + "同时告警");
                 analysisBean.setHandlerInfo("建议检查上游设备，排查隔离地单元/字符串叠加分配器设备接电/工作状态");
                 analysisBean.setDeviceName(" ");
@@ -457,7 +457,7 @@ public class DataHandler {
 
                 ExcelBean excel = new ExcelBean();
                 excel.setSubway(device.getSubway());
-                excel.setDeviceName("传输设备");
+                excel.setDeviceName("视频传输设备");
                 excel.getAlarmInfo().add("设备：" + fusionName.toString() + timeFormat.format(new Date(list.get(0).getTimeStamp())) + "同时告警");
                 excel.setAlarmCount(flag+"");
                 excel.setLastTime(list.get(0).getTimeStamp());

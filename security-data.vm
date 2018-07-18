@@ -917,6 +917,7 @@
         </div>
 
         <!-- 超过阈值设备统计 -->
+        <!--
         <div id='GaoWeiLieBiao'>
             <h2 id="requests" style="padding-bottom: 8px;">高危设备统计</h2>
 
@@ -960,6 +961,7 @@
 
             </table>
         </div>
+        -->
         <!--高危列表-->
         <div id='GaoWeiLieBiao'>
             <h2 id="requests" style="padding-bottom: 8px;">高危设备告警</h2>
