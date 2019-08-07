@@ -1,7 +1,8 @@
 package club.gaiaProject.sashimi.util;
 
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Created by luoxiaolong on 17-12-22.
@@ -36,7 +37,7 @@ public abstract class MyLogger {
 
     private static Logger logger() {
         StackTraceElement stackTraceElement = getStackTraceElement();
-        return Logger.getLogger(stackTraceElement.getClassName());
+        return LogManager.getLogger(stackTraceElement.getClassName());
     }
 
     private static StackTraceElement getStackTraceElement() {

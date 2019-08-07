@@ -8,7 +8,6 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.ss.formula.functions.Even;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -22,7 +21,6 @@ import java.util.regex.Pattern;
 
 import org.apache.velocity.app.VelocityEngine;
 
-import static sun.plugin.cache.FileVersion.regEx;
 
 
 /**
@@ -63,6 +61,13 @@ public class DataHandler {
 
     private List<ExcelBean> excelData = new ArrayList<>();
 
+    private static Set<String> zhengxian1 = new HashSet<>();
+    private static Set<String> zhengxian2 = new HashSet<>();
+    private static Set<String> zhengxian3 = new HashSet<>();
+
+    public DataHandler() {
+    }
+
     public List<List<EventBean>> getDoubtfulOverhulEvents() {
         return doubtfulOverhulEvents;
     }
@@ -75,6 +80,26 @@ public class DataHandler {
     public DataHandler(List<EventBean> events, Map<String, List<FixEventBean>> fixEvent) {
         this.events = events;
         this.fixEvent = fixEvent;
+
+        zhengxian1.add("刘庄站");
+        zhengxian1.add("柳林站");
+        zhengxian1.add("沙门站");
+        zhengxian1.add("北三环站");
+        zhengxian1.add("东风路站");
+        zhengxian1.add("关虎屯站");
+        zhengxian1.add("黄河路站");
+        zhengxian1.add("紫荆山站");
+
+        zhengxian2.add("东大街站");
+        zhengxian2.add("陇海东路站");
+        zhengxian2.add("二里岗站");
+        zhengxian2.add("南五里堡站");
+        zhengxian2.add("花寨站");
+        zhengxian2.add("南三环站");
+        zhengxian2.add("站马屯站");
+        zhengxian2.add("南四环站");
+
+        zhengxian3.add("车辆段");
     }
 
     public void outputExcel(File file) throws Exception {
@@ -85,15 +110,18 @@ public class DataHandler {
 
     }
 
-    public void createHTML(File file) throws Exception {
+    public String createHTML(File file) throws Exception {
         VelocityEngine velocityEngine = new VelocityEngine();
+
         Properties properties = new Properties();
         properties.setProperty(Velocity.ENCODING_DEFAULT, "UTF-8");
         properties.setProperty(Velocity.INPUT_ENCODING, "UTF-8");
         properties.setProperty(Velocity.OUTPUT_ENCODING, "UTF-8");
+        properties.setProperty("resource.loader", "file");
+        properties.setProperty("file.resource.loader.class","org.apache.velocity.runtime.resource.loader.FileResourceLoader");
         velocityEngine.init(properties);
 
-        Template template = velocityEngine.getTemplate("security-data.vm", "UTF-8");
+        Template template = velocityEngine.getTemplate("security-data.html", "UTF-8");
         VelocityContext context = new VelocityContext();
         //构造展示数据
         String fromDate = ExcelUtils.dateFormat.format(new Date(startTime)) + "--" + ExcelUtils.dateFormat.format(new Date(endTime));
@@ -142,24 +170,39 @@ public class DataHandler {
         //构造饼图数据
         JSONObject bingData = new JSONObject();
         JSONArray typeList = new JSONArray();
-        Integer otherSize = 0;
+
+        Map<String, Integer> bing = new HashedMap();
         for (Map.Entry<String, List<EventBean>> entry : deviceErrorNum.entrySet()) {
-            if (entry.getValue().size() >= limitFoucs) {
-                DeviceBean deviceBean = deviceMapping.get(entry.getKey());
-                JSONObject type = new JSONObject();
-                type.put("name", deviceBean.getName());
-                type.put("value", entry.getValue().size());
-                typeList.add(type);
-            } else {
-                otherSize += entry.getValue().size();
+            String subway = entry.getValue().get(0).getDevice().getSubway();
+            if (zhengxian1.contains(subway)) {
+                if (bing.containsKey("正线一范围")) {
+                    bing.put("正线一范围", bing.get("正线一范围") + entry.getValue().size());
+                } else {
+                    bing.put("正线一范围", entry.getValue().size());
+                }
+            }
+            if (zhengxian2.contains(subway)) {
+                if (bing.containsKey("正线二范围")) {
+                    bing.put("正线二范围", bing.get("正线二范围") + entry.getValue().size());
+                } else {
+                    bing.put("正线二范围", entry.getValue().size());
+                }
+            }
+            if (zhengxian3.contains(subway)) {
+                if (bing.containsKey("车辆段")) {
+                    bing.put("车辆段", bing.get("车辆段") + entry.getValue().size());
+                } else {
+                    bing.put("车辆段", entry.getValue().size());
+                }
             }
         }
-        if (otherSize > 0) {
-            Map<String, Object> type = new HashMap<>();
-            type.put("name", "others");
-            type.put("value", otherSize);
-            typeList.add(type);
-        }
+
+        bing.forEach((x, y) -> {
+            JSONObject obj = new JSONObject();
+            obj.put("name", x);
+            obj.put("value", y);
+            typeList.add(obj);
+        });
 
         bingData.put("typeList", typeList);
         context.put("bingData", bingData.toString());
@@ -329,9 +372,9 @@ public class DataHandler {
                 ExcelBean excel = new ExcelBean();
                 excel.setSubway(analysisBean.getSubway());
                 excel.setDeviceName(device.getName());
-                excel.setAlarmCount(y.size()+"");
-                for (EventBean e : y){
-                    if (excel.getLastTime() == null || excel.getLastTime()<e.getTimeStamp()){
+                excel.setAlarmCount(y.size() + "");
+                for (EventBean e : y) {
+                    if (excel.getLastTime() == null || excel.getLastTime() < e.getTimeStamp()) {
                         excel.setLastTime(e.getTimeStamp());
                     }
                     excel.getAlarmInfo().add(e.getAlarm().getInfo());
@@ -347,9 +390,9 @@ public class DataHandler {
                 ExcelBean excel = new ExcelBean();
                 excel.setSubway(analysisBean.getSubway());
                 excel.setDeviceName(device.getName());
-                excel.setAlarmCount(y.size()+"");
-                for (EventBean e : y){
-                    if (excel.getLastTime() == null || excel.getLastTime()<e.getTimeStamp()){
+                excel.setAlarmCount(y.size() + "");
+                for (EventBean e : y) {
+                    if (excel.getLastTime() == null || excel.getLastTime() < e.getTimeStamp()) {
                         excel.setLastTime(e.getTimeStamp());
                     }
                     excel.getAlarmInfo().add(e.getAlarm().getInfo());
@@ -366,10 +409,13 @@ public class DataHandler {
         });
         context.put("fistTable", fistTable);
 
-        PrintWriter pw = new PrintWriter(file, "UTF-8");
+        File out = new File(file.getCanonicalPath()+File.separator+fromDate+"数据报告.html");
+        out.createNewFile();
+        PrintWriter pw = new PrintWriter(out, "UTF-8");
         template.merge(context, pw);
         pw.close();
 
+        return fromDate;
 
     }
 
@@ -423,7 +469,7 @@ public class DataHandler {
                         AnalysisBean analysisBean = new AnalysisBean();
                         analysisBean.setSubway(device.getSubway());
                         analysisBean.setType("视频传输设备");
-                        analysisBean.setAnalysisInfo("设备：" + fusionName.substring(0,fusionName.length()-1) + timeFormat.format(new Date(eventBean.getTimeStamp())) + "同时告警");
+                        analysisBean.setAnalysisInfo("设备：" + fusionName.substring(0, fusionName.length() - 1) + timeFormat.format(new Date(eventBean.getTimeStamp())) + "同时告警");
                         analysisBean.setHandlerInfo("建议检查上游设备，排查隔离地单元/字符串叠加分配器设备接电/工作状态");
                         analysisBean.setDeviceName(" ");
                         ret.add(analysisBean);
@@ -433,7 +479,7 @@ public class DataHandler {
                         excel.setSubway(device.getSubway());
                         excel.setDeviceName("视频传输设备");
                         excel.getAlarmInfo().add("设备：" + fusionName.toString() + timeFormat.format(new Date(eventBean.getTimeStamp())) + "同时告警");
-                        excel.setAlarmCount(flag+"");
+                        excel.setAlarmCount(flag + "");
                         excel.setLastTime(eventBean.getTimeStamp());
                         this.excelData.add(excel);
                     }
@@ -459,7 +505,7 @@ public class DataHandler {
                 excel.setSubway(device.getSubway());
                 excel.setDeviceName("视频传输设备");
                 excel.getAlarmInfo().add("设备：" + fusionName.toString() + timeFormat.format(new Date(list.get(0).getTimeStamp())) + "同时告警");
-                excel.setAlarmCount(flag+"");
+                excel.setAlarmCount(flag + "");
                 excel.setLastTime(list.get(0).getTimeStamp());
                 this.excelData.add(excel);
             }
@@ -711,8 +757,6 @@ public class DataHandler {
         return dateFormat.format(s.getTime());
     }
 
-    public static void main(String[] args) {
-    }
 
 }
 
